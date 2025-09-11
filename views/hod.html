@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOD Dashboard - Department Management System</title>
+    <link rel="stylesheet" href="/css/hod.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Responsive Modal Styles for Teacher Events -->
+    <style>
+        /* Teacher Event Modal Responsiveness */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .modal.show {
+            display: flex; /* Show when 'show' class is added */
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 1200px;
+            max-height: 95vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .close, [data-close-modal] {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .close:hover, [data-close-modal]:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+        
+        /* Document Editor Responsiveness */
+        .doc-editor {
+            display: grid;
+            gap: 20px;
+            height: auto;
+        }
+        
+        .doc-editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 70vh;
+            min-height: 500px;
+        }
+        
+        .doc-rows-container, .doc-preview-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .doc-rows, .doc-preview {
+            height: 100%;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        /* Form Controls */
+        .form-sidebar {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2c5aa0;
+        }
+        
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            .modal {
+                padding: 10px;
+            }
+            
+            .modal-content {
+                max-width: 95vw;
+                max-height: 90vh;
+            }
+            
+            .doc-editor-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .doc-rows-container, .doc-preview-container {
+                min-height: 300px;
+            }
+            
+            .modal-header {
+                padding: 16px 20px;
+            }
+            
+            .modal-header h3 {
+                font-size: 1.25rem;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .modal {
+                padding: 5px;
+            }
+            
+            .modal-content {
+                max-width: 98vw;
+                max-height: 95vh;
+            }
+            
+            .modal-header {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .modal-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .modal-body {
+                padding: 16px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .doc-rows, .doc-preview {
+                padding: 12px;
+            }
+            
+            .btn {
+                padding: 12px 16px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .modal-header {
+                padding: 10px 12px;
+            }
+            
+            .modal-body {
+                padding: 12px;
+            }
+            
+            .doc-rows, .doc-preview {
+                padding: 8px;
+            }
+            
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 12px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+        
+        /* HOD Panel Specific Adjustments */
+        .dashboard-container .modal {
+            z-index: 10001; /* Above HOD sidebar */
+        }
+        
+        /* Image Upload Responsiveness */
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .image-preview-container img {
+            max-width: 100px;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+        
+        /* Document Row Responsiveness */
+        .doc-row {
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .doc-row-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .doc-row select {
+            min-width: 120px;
+        }
+        
+        .row-content {
+            padding: 12px;
+            min-height: 60px;
+            border: none;
+            resize: vertical;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        @media (max-width: 768px) {
+            .doc-row-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .doc-row select {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-user-tie"></i> HOD Dashboard</h1>
+                <div class="user-info">
+                    <span id="hodInfo">Loading...</span>
+                    <button id="logoutBtn" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul class="nav-menu">
+                <li><a href="#dashboard" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#approvals" class="nav-link"><i class="fas fa-check-circle"></i> Approvals</a></li>
+                <li><a href="#clubs" class="nav-link"><i class="fas fa-users"></i> Club Management</a></li>
+                <li><a href="#events" class="nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                <li><a href="#teacher-events" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> Teacher Events</a></li>
+                <li><a href="#projects" class="nav-link"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                <li><a href="#teachers" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
+                <li><a href="#students" class="nav-link"><i class="fas fa-user-graduate"></i> Students</a></li>
+                <li><a href="#budgets" class="nav-link"><i class="fas fa-money-bill-wave"></i> Budget Approvals</a></li>
+                <li><a href="#reports" class="nav-link"><i class="fas fa-chart-bar"></i> Department Reports</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="section active">
+                <div class="section-header">
+                    <h2>Department Overview</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="stat-content">
+                            <h3 id="pendingApprovals">0</h3>
+                            <p>Pending Approvals</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalClubs">0</h3>
+                            <p>Department Clubs</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalEvents">0</h3>
+                            <p>Events This Month</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalStudents">0</h3>
+                            <p>Department Students</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-money-bill"></i></div>
+                        <div class="stat-content">
+                            <h3 id="budgetRequests">0</h3>
+                            <p>Budget Requests</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div id="recentActivity" class="activity-list">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Approvals Section -->
+            <section id="approvalsSection" class="section">
+                <div class="section-header">
+                    <h2>Pending Approvals</h2>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="clubs">Club Proposals</button>
+                    <button class="tab-btn" data-tab="events">Event Requests</button>
+                    <button class="tab-btn" data-tab="budgets">Budget Requests</button>
+                </div>
+
+                <div id="clubApprovals" class="tab-content active">
+                    <div id="pendingClubs" class="approval-list">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <div id="eventApprovals" class="tab-content">
+                    <div id="pendingEvents" class="approval-list">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <div id="budgetApprovals" class="tab-content">
+                    <div id="pendingBudgets" class="approval-list">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clubs Section -->
+            <section id="clubsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Clubs</h2>
+                </div>
+                
+                <div class="filter-section">
+                    <select id="clubStatusFilter">
+                        <option value="">All Clubs</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending Approval</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div id="clubsList" class="data-list">
+                    <!-- Dynamic content -->
+                </div>
+            </section>
+
+            <!-- Events Section -->
+            <section id="eventsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Events</h2>
+                </div>
+                
+                <div class="filter-section">
+                    <select id="eventTypeFilter">
+                        <option value="">All Events</option>
+                        <option value="club-event">Club Events</option>
+                        <option value="personal-teacher-event">Personal Teacher Events</option>
+                        <option value="joint-teacher-event">Joint Teacher Events</option>
+                    </select>
+                    <select id="eventStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div id="eventsList" class="data-list">
+                    <!-- Dynamic content -->
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projectsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Projects</h2>
+                </div>
+                
+                <div class="filter-section">
+                    <select id="projectTypeFilter">
+                        <option value="">All Project Types</option>
+                        <option value="mini">Mini Projects</option>
+                        <option value="major">Major Projects</option>
+                        <option value="personal">Personal Projects</option>
+                    </select>
+                    <select id="projectStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending-approval">Pending Approval</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <div id="projectsList" class="data-list">
+                    <!-- Dynamic content -->
+                </div>
+            </section>
+
+            <!-- Teacher Events Section -->
+            <section id="teacher-eventsSection" class="section">
+                <div class="section-header">
+                    <h2>Teacher Events</h2>
+                    <div class="section-controls">
+                        <input type="text" id="teacherEventSearch" placeholder="Search teacher events..." class="search-input">
+                        <button id="createTeacherEventBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create Event
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <select id="teacherEventStatusFilter">
+                        <option value="">All Events</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <select id="teacherEventCreatedByFilter">
+                        <option value="">All Teachers</option>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+
+                <div id="teacherEventsList" class="data-list">
+                    <!-- Dynamic content -->
+                </div>
+            </section>
+
+            <!-- Budget Section -->
+            <section id="budgetsSection" class="section">
+                <div class="section-header">
+                    <h2>Budget Management</h2>
+                </div>
+                
+                <div class="budget-stats">
+                    <div class="budget-card">
+                        <h4>Total Requested</h4>
+                        <span id="totalRequested" class="amount">₹0</span>
+                    </div>
+                    <div class="budget-card">
+                        <h4>Approved Budget</h4>
+                        <span id="totalApproved" class="amount">₹0</span>
+                    </div>
+                    <div class="budget-card">
+                        <h4>Utilized Amount</h4>
+                        <span id="totalUtilized" class="amount">₹0</span>
+                    </div>
+                </div>
+
+                <div id="budgetsList" class="data-list">
+                    <!-- Dynamic content -->
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reportsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Reports</h2>
+                    <div class="report-actions">
+                        <button id="generateReportBtn" class="btn btn-secondary">
+                            <i class="fas fa-file-alt"></i> Generate Report
+                        </button>
+                        <button id="generateNewsletterBtn" class="btn btn-primary">
+                            <i class="fas fa-newspaper"></i> Generate Newsletter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="report-filters">
+                    <div class="filter-group">
+                        <label>Report Period:</label>
+                        <select id="reportPeriod">
+                            <option value="current-month">Current Month</option>
+                            <option value="current-quarter">Current Quarter</option>
+                            <option value="current-year">Current Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="customDateRange" style="display: none;">
+                        <input type="date" id="startDate">
+                        <input type="date" id="endDate">
+                    </div>
+                </div>
+
+                <div id="reportContent" class="report-content">
+                    <!-- Generated reports will appear here -->
+                </div>
+            </section>
+
+            <!-- Teachers Section -->
+            <section id="teachersSection" class="section">
+                <div class="section-header">
+                    <h2>Department Teachers</h2>
+                    <div class="search-controls">
+                        <input type="text" id="teacherSearch" placeholder="Search teachers..." class="search-input">
+                    </div>
+                </div>
+                <div id="teachersList" class="data-grid">
+                    <!-- Teachers will load here -->
+                </div>
+            </section>
+
+            <!-- Students Section -->
+            <section id="studentsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Students</h2>
+                    <div class="student-controls">
+                        <input type="text" id="studentSearch" placeholder="Search students..." class="search-input">
+                        <select id="semesterFilter" class="filter-select">
+                            <option value="">All Semesters</option>
+                            <option value="1">1st Semester</option>
+                            <option value="2">2nd Semester</option>
+                            <option value="3">3rd Semester</option>
+                            <option value="4">4th Semester</option>
+                            <option value="5">5th Semester</option>
+                            <option value="6">6th Semester</option>
+                            <option value="7">7th Semester</option>
+                            <option value="8">8th Semester</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="studentsList" class="data-grid">
+                    <!-- Students will load here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- View Student Modal -->
+    <div id="viewStudentModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>Student Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <div class="student-details-content">
+                <div class="student-profile-section">
+                    <div class="student-avatar-large">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="student-basic-info">
+                        <h2 id="modalStudentName">Loading...</h2>
+                        <p id="modalStudentId" class="student-id-large">Loading...</p>
+                        <p id="modalStudentDepartment" class="student-department">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="student-info-grid">
+                    <div class="info-card">
+                        <h4>Academic Information</h4>
+                        <div class="info-row">
+                            <label>Email:</label>
+                            <span id="modalStudentEmail">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Roll Number:</label>
+                            <span id="modalStudentRoll">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Semester:</label>
+                            <span id="modalStudentSemester">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Contact Number:</label>
+                            <span id="modalStudentContact">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Joined:</label>
+                            <span id="modalStudentJoined">Loading...</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h4>Assigned Teachers</h4>
+                        <div class="info-row">
+                            <label>Proctor:</label>
+                            <span id="modalStudentProctor">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Class Teacher:</label>
+                            <span id="modalStudentClassTeacher">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Your Relationship:</label>
+                            <span id="modalStudentRelationship" class="relationship-badge">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Activity Tabs -->
+                <div class="student-tabs">
+                    <button class="tab-btn active" data-tab="certificates">Certificates</button>
+                    <button class="tab-btn" data-tab="internships">Internships</button>
+                    <button class="tab-btn" data-tab="projects">Projects</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Certificates Tab -->
+                    <div id="certificatesTab" class="tab-pane">
+                        <div class="section-header">
+                            <h4>Student Certificates</h4>
+                            <button class="btn btn-sm btn-primary" id="addCertificateBtn" data-action="add-certificate" style="display: none;">
+                                <i class="fas fa-plus"></i> Add Certificate
+                            </button>
+                        </div>
+                        <div id="studentCertificates" class="certificates-list">
+                            <p>Loading certificates...</p>
+                        </div>
+                    </div>
+
+                    <!-- Internships Tab -->
+                    <div id="internshipsTab" class="tab-pane">
+                        <div class="section-header">
+                            <h4>Student Internships</h4>
+                            <button class="btn btn-sm btn-primary" id="addInternshipBtn" data-action="add-internship" style="display: none;">
+                                <i class="fas fa-plus"></i> Add Internship
+                            </button>
+                        </div>
+                        <div id="studentInternships" class="internships-list">
+                            <p>Loading internships...</p>
+                        </div>
+                    </div>
+
+                    <!-- Projects Tab -->
+                    <div id="projectsTab" class="tab-pane">
+                        <div class="section-header">
+                            <h4>Student Projects</h4>
+                            <button class="btn btn-sm btn-primary" id="addProjectBtn" data-action="add-project" style="display: none;">
+                                <i class="fas fa-plus"></i> Add Project
+                            </button>
+                        </div>
+                        <div id="studentProjects" class="projects-list">
+                            <p>Loading projects...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Close</button>
+                    <button type="button" class="btn btn-primary" id="editStudentBtn" style="display: none;">
+                        <i class="fas fa-edit"></i> Edit Student
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Edit Student Profile</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editStudentForm" class="modal-form">
+                <input type="hidden" id="editStudentId" name="studentId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentName">Name *</label>
+                        <input type="text" id="editStudentName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentEmail">Email *</label>
+                        <input type="email" id="editStudentEmail" name="email" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Certificate Modal -->
+    <div id="addCertificateModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Certificate for Student</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addCertificateForm">
+                <input type="hidden" id="addCertStudentId" name="studentId">
+                <div class="form-group">
+                    <label for="addCertTitle">Certificate Title *</label>
+                    <input type="text" id="addCertTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="addCertIssuer">Issuing Organization *</label>
+                    <input type="text" id="addCertIssuer" name="issuer" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Certificate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Internship Modal -->
+    <div id="addInternshipModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Internship for Student</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addInternshipForm" enctype="multipart/form-data">
+                <input type="hidden" id="addInternStudentId" name="studentId">
+                <div class="form-group">
+                    <label for="addInternCompany">Company Name *</label>
+                    <input type="text" id="addInternCompany" name="companyName" required>
+                </div>
+                <div class="form-group">
+                    <label for="addInternPosition">Position *</label>
+                    <input type="text" id="addInternPosition" name="position" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Internship</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="addProjectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Project for Student</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addProjectForm">
+                <input type="hidden" id="addProjectStudentId" name="studentId">
+                <div class="form-group">
+                    <label for="addProjectTitle">Project Title *</label>
+                    <input type="text" id="addProjectTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="addProjectType">Project Type *</label>
+                    <select id="addProjectType" name="projectType" required>
+                        <option value="">Select Type</option>
+                        <option value="mini">Mini Project</option>
+                        <option value="major">Major Project</option>
+                        <option value="personal">Personal Project</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Certificate Modal -->
+    <div id="editCertificateModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Certificate</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editCertificateForm">
+                <input type="hidden" id="editCertId" name="certificateId">
+                <input type="hidden" id="editCertStudentId" name="studentId">
+                <div class="form-group">
+                    <label for="editCertTitle">Certificate Title *</label>
+                    <input type="text" id="editCertTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCertIssuer">Issuing Organization *</label>
+                    <input type="text" id="editCertIssuer" name="issuer" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Certificate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Internship Modal -->
+    <div id="editInternshipModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Internship</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editInternshipForm">
+                <input type="hidden" id="editInternId" name="internshipId">
+                <input type="hidden" id="editInternStudentId" name="studentId">
+                <div class="form-group">
+                    <label for="editInternCompany">Company Name *</label>
+                    <input type="text" id="editInternCompany" name="companyName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editInternPosition">Position *</label>
+                    <input type="text" id="editInternPosition" name="position" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Internship</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Project</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editProjectForm">
+                <input type="hidden" id="editProjectId" name="projectId">
+                <input type="hidden" id="editProjectStudentId" name="studentId">
+                <div class="form-group">
+                    <label for="editProjectTitle">Project Title *</label>
+                    <input type="text" id="editProjectTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProjectType">Project Type *</label>
+                    <select id="editProjectType" name="studentProjectType" required>
+                        <option value="">Select Type</option>
+                        <option value="personal">Personal Project</option>
+                        <option value="mini">Mini Project</option>
+                        <option value="major">Major Project</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="approvalModalTitle">Approve Item</h3>
+                <span id="closeApprovalModal" class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="approvalDetails">
+                    <!-- Item details will be loaded here -->
+                </div>
+                <div class="approval-actions">
+                    <div class="form-group">
+                        <label for="approvalComments">Comments:</label>
+                        <textarea id="approvalComments" rows="3" placeholder="Add any comments or feedback..."></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button id="approveBtn" class="btn btn-success">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button id="rejectBtn" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                        <button id="cancelApprovalBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/teacher.js"></script>
+    <script src="/js/hod.js"></script>
+</body>
+</html>

@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Department Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/teacher.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-chalkboard-teacher"></i> Teacher Panel</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#dashboard" data-section="dashboard" class="nav-link active">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a></li>
+                    <li><a href="#clubs" data-section="clubs" class="nav-link">
+                        <i class="fas fa-users"></i> My Clubs
+                    </a></li>
+                    <li><a href="#events" data-section="events" class="nav-link">
+                        <i class="fas fa-calendar"></i> Events
+                    </a></li>
+                    <li><a href="#projects" data-section="projects" class="nav-link">
+                        <i class="fas fa-project-diagram"></i> Projects
+                    </a></li>
+                    <li><a href="#students" data-section="students" class="nav-link">
+                        <i class="fas fa-user-graduate"></i> Students
+                    </a></li>
+                    <li><a href="#profile" data-section="profile" class="nav-link">
+                        <i class="fas fa-user"></i> Profile
+                    </a></li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Teacher Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span id="userDepartment" class="user-department">Loading...</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon clubs">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="totalClubs">0</h3>
+                            <p>My Clubs</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon events">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="totalEvents">0</h3>
+                            <p>Events Organized</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon projects">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="totalProjects">0</h3>
+                            <p>Projects Mentored</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon students">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="totalStudents">0</h3>
+                            <p>Students Mentored</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="dashboard-section">
+                        <h3>Recent Activities</h3>
+                        <div id="recentActivities" class="activity-list">
+                            <p>Loading recent activities...</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-section">
+                        <h3>Pending Approvals</h3>
+                        <div id="pendingApprovals" class="approval-list">
+                            <p>Loading pending approvals...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clubs Section -->
+            <section id="clubs" class="content-section">
+                <div class="section-header">
+                    <h2>My Clubs</h2>
+                    <button class="btn btn-primary" id="createClubBtn">
+                        <i class="fas fa-plus"></i> Create New Club
+                    </button>
+                </div>
+
+                <div class="clubs-grid" id="clubsGrid">
+                    <p>Loading clubs...</p>
+                </div>
+            </section>
+
+            <!-- Events Section -->
+            <section id="events" class="content-section">
+                <div class="section-header">
+                    <h2>My Events</h2>
+                    <button class="btn btn-primary" id="createEventBtn">
+                        <i class="fas fa-plus"></i> Create New Event
+                    </button>
+                </div>
+
+                <div class="events-list" id="eventsList">
+                    <p>Loading events...</p>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="content-section">
+                <div class="section-header">
+                    <h2>Projects Under My Mentorship</h2>
+                    <button class="btn btn-primary" id="createProjectBtn">
+                        <i class="fas fa-plus"></i> Create New Project
+                    </button>
+                </div>
+
+                <div class="projects-list" id="projectsList">
+                    <p>Loading projects...</p>
+                </div>
+            </section>
+
+            <!-- Students Section -->
+            <section id="students" class="content-section">
+                <div class="section-header">
+                    <h2>Students</h2>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="studentFilter">Filter:</label>
+                            <select id="studentFilter">
+                                <option value="all">All Students</option>
+                                <option value="assigned">My Students</option>
+                                <option value="proctor">As Proctor</option>
+                                <option value="classteacher">As Class Teacher</option>
+                                <option value="mentor">Project Mentorship Requests</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="students-grid" id="studentsGrid">
+                    <p>Loading students...</p>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="content-section">
+                <div class="section-header">
+                    <h2>My Profile</h2>
+                    <button class="btn btn-primary" id="editProfileBtn">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                </div>
+
+                <div class="profile-content">
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h3 id="profileName">Loading...</h3>
+                                <p id="profileDesignation">Loading...</p>
+                                <p id="profileDepartment">Loading...</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-details">
+                            <div class="detail-row">
+                                <label>Email:</label>
+                                <span id="profileEmail">Loading...</span>
+                            </div>
+                            <div class="detail-row">
+                                <label>Employee ID:</label>
+                                <span id="profileEmployeeId">Loading...</span>
+                            </div>
+                            <div class="detail-row">
+                                <label>Phone:</label>
+                                <span id="profilePhone">Loading...</span>
+                            </div>
+                            <div class="detail-row">
+                                <label>Joined:</label>
+                                <span id="profileJoinDate">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Create Club Modal -->
+    <div id="createClubModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Club</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <form id="createClubForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clubName">Club Name *</label>
+                        <input type="text" id="clubName" name="name" required maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="clubPurpose">Club Purpose *</label>
+                        <textarea id="clubPurpose" name="purpose" required maxlength="500" rows="3" 
+                                  placeholder="Describe the main purpose and goals of this club"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="clubDescription">Description</label>
+                        <textarea id="clubDescription" name="description" maxlength="1000" rows="4" 
+                                  placeholder="Provide a detailed description of the club's activities and objectives"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="establishedDate">Established Date</label>
+                        <input type="date" id="establishedDate" name="establishedDate">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Social Media Links (Optional)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clubWebsite">Website</label>
+                            <input type="url" id="clubWebsite" name="website" placeholder="https://example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="clubEmail">Email</label>
+                            <input type="email" id="clubEmail" name="email" placeholder="club@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clubInstagram">Instagram</label>
+                            <input type="url" id="clubInstagram" name="instagram" placeholder="https://instagram.com/clubname">
+                        </div>
+                        <div class="form-group">
+                            <label for="clubLinkedin">LinkedIn</label>
+                            <input type="url" id="clubLinkedin" name="linkedin" placeholder="https://linkedin.com/company/clubname">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Club
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <form id="editProfileForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editName">Name *</label>
+                        <input type="text" id="editName" name="name" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Email *</label>
+                        <input type="email" id="editEmail" name="email" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editContactNumber">Contact Number</label>
+                        <input type="tel" id="editContactNumber" name="contactNumber" maxlength="15">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editProfileImage">Profile Image</label>
+                        <input type="file" id="editProfileImage" name="profileImage" accept="image/*">
+                        <small class="form-help">Upload JPG, JPEG, or PNG files only (max 5MB)</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Student Details Modal -->
+    <div id="viewStudentModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>Student Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <div class="student-details-content">
+                <div class="student-profile-section">
+                    <div class="student-avatar-large">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="student-basic-info">
+                        <h2 id="modalStudentName">Loading...</h2>
+                        <p id="modalStudentId" class="student-id-large">Loading...</p>
+                        <p id="modalStudentDepartment" class="student-department">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="student-info-grid">
+                    <div class="info-card">
+                        <h4>Academic Information</h4>
+                        <div class="info-row">
+                            <label>Email:</label>
+                            <span id="modalStudentEmail">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Roll Number:</label>
+                            <span id="modalStudentRoll">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Semester:</label>
+                            <span id="modalStudentSemester">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Contact Number:</label>
+                            <span id="modalStudentContact">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Joined:</label>
+                            <span id="modalStudentJoined">Loading...</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h4>Assigned Teachers</h4>
+                        <div class="info-row">
+                            <label>Proctor:</label>
+                            <span id="modalStudentProctor">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Class Teacher:</label>
+                            <span id="modalStudentClassTeacher">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Your Relationship:</label>
+                            <span id="modalStudentRelationship" class="relationship-badge">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Activity Tabs -->
+                <div class="student-tabs">
+                    <button class="tab-btn active" data-tab="certificates">Certificates</button>
+                    <button class="tab-btn" data-tab="internships">Internships</button>
+                    <button class="tab-btn" data-tab="projects">Projects</button>
+                </div>
+
+                <div class="tab-content">
+
+                    <!-- Certificates Tab -->
+                    <div id="certificatesTab" class="tab-pane">
+                        <div class="section-header">
+                            <h4>Student Certificates</h4>
+                            <button class="btn btn-sm btn-primary" id="addCertificateBtn" data-action="add-certificate" style="display: none;">
+                                <i class="fas fa-plus"></i> Add Certificate
+                            </button>
+                        </div>
+                        <div id="studentCertificates" class="certificates-list">
+                            <p>Loading certificates...</p>
+                        </div>
+                    </div>
+
+                    <!-- Internships Tab -->
+                    <div id="internshipsTab" class="tab-pane">
+                        <div class="section-header">
+                            <h4>Student Internships</h4>
+                            <button class="btn btn-sm btn-primary" id="addInternshipBtn" data-action="add-internship" style="display: none;">
+                                <i class="fas fa-plus"></i> Add Internship
+                            </button>
+                        </div>
+                        <div id="studentInternships" class="internships-list">
+                            <p>Loading internships...</p>
+                        </div>
+                    </div>
+
+                    <!-- Projects Tab -->
+                    <div id="projectsTab" class="tab-pane">
+                        <div class="section-header">
+                            <h4>Student Projects</h4>
+                            <button class="btn btn-sm btn-primary" id="addProjectBtn" data-action="add-project" style="display: none;">
+                                <i class="fas fa-plus"></i> Add Project
+                            </button>
+                        </div>
+                        <div id="studentProjects" class="projects-list">
+                            <p>Loading projects...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Close</button>
+                    <button type="button" class="btn btn-primary" id="editStudentBtn" style="display: none;">
+                        <i class="fas fa-edit"></i> Edit Student
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Edit Student Profile</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <form id="editStudentForm" class="modal-form">
+                <input type="hidden" id="editStudentId" name="studentId">
+                
+                <h4 style="margin-top: 20px; color: #333;">Basic Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentName">Name *</label>
+                        <input type="text" id="editStudentName" name="name" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentEmail">Email *</label>
+                        <input type="email" id="editStudentEmail" name="email" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentUSN">USN</label>
+                        <input type="text" id="editStudentUSN" name="usn" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentRollNumber">Roll Number</label>
+                        <input type="text" id="editStudentRollNumber" name="rollNumber" maxlength="20">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentContact">Contact Number</label>
+                        <input type="tel" id="editStudentContact" name="contactNumber" maxlength="15">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentAlternateContact">Alternate Contact</label>
+                        <input type="tel" id="editStudentAlternateContact" name="alternateContact" maxlength="15">
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 20px; color: #333;">Academic Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentSemester">Semester</label>
+                        <select id="editStudentSemester" name="semester">
+                            <option value="1">1st Semester</option>
+                            <option value="2">2nd Semester</option>
+                            <option value="3">3rd Semester</option>
+                            <option value="4">4th Semester</option>
+                            <option value="5">5th Semester</option>
+                            <option value="6">6th Semester</option>
+                            <option value="7">7th Semester</option>
+                            <option value="8">8th Semester</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentSection">Section</label>
+                        <input type="text" id="editStudentSection" name="section" maxlength="10">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentBatch">Batch</label>
+                        <input type="text" id="editStudentBatch" name="batch" placeholder="e.g., 2020-2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentAdmissionYear">Admission Year</label>
+                        <input type="number" id="editStudentAdmissionYear" name="admissionYear" min="2000" max="2100">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentCGPA">CGPA</label>
+                        <input type="number" id="editStudentCGPA" name="cgpa" step="0.01" min="0" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentBacklogs">Number of Backlogs</label>
+                        <input type="number" id="editStudentBacklogs" name="backlogs" min="0">
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 20px; color: #333;">Personal Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentDateOfBirth">Date of Birth</label>
+                        <input type="date" id="editStudentDateOfBirth" name="dateOfBirth">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentGender">Gender</label>
+                        <select id="editStudentGender" name="gender">
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentBloodGroup">Blood Group</label>
+                        <select id="editStudentBloodGroup" name="bloodGroup">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentAadharNumber">Aadhar Number</label>
+                        <input type="text" id="editStudentAadharNumber" name="aadharNumber" maxlength="12" pattern="[0-9]{12}">
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 20px; color: #333;">Address Information</h4>
+                <div class="form-group">
+                    <label for="editStudentAddress">Current Address</label>
+                    <textarea id="editStudentAddress" name="address" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentCity">City</label>
+                        <input type="text" id="editStudentCity" name="city">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentState">State</label>
+                        <input type="text" id="editStudentState" name="state">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentPincode">Pincode</label>
+                        <input type="text" id="editStudentPincode" name="pincode" maxlength="6" pattern="[0-9]{6}">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentCountry">Country</label>
+                        <input type="text" id="editStudentCountry" name="country" value="India">
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 20px; color: #333;">Parent/Guardian Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentFatherName">Father's Name</label>
+                        <input type="text" id="editStudentFatherName" name="fatherName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentFatherContact">Father's Contact</label>
+                        <input type="tel" id="editStudentFatherContact" name="fatherContact">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentMotherName">Mother's Name</label>
+                        <input type="text" id="editStudentMotherName" name="motherName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStudentMotherContact">Mother's Contact</label>
+                        <input type="tel" id="editStudentMotherContact" name="motherContact">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editStudentParentEmail">Parent Email</label>
+                    <input type="email" id="editStudentParentEmail" name="parentEmail">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Student
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Certificate Modal -->
+    <div id="editCertificateModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Edit Certificate</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editCertificateForm" enctype="multipart/form-data">
+                <input type="hidden" id="editCertId" name="certificateId">
+                <input type="hidden" id="editCertStudentId" name="studentId">
+                
+                <!-- EXACT SAME FIELDS AS STUDENT FORM -->
+                <div class="form-group">
+                    <label for="editCertTitle">Certificate Title *</label>
+                    <input type="text" id="editCertTitle" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editCertIssuer">Issuing Organization *</label>
+                    <input type="text" id="editCertIssuer" name="issuer" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editCertOrganization">Organization/Platform (Optional)</label>
+                    <input type="text" id="editCertOrganization" name="organization" placeholder="e.g., Coursera, NPTEL, Microsoft">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCertStartDate">Start Date (Optional)</label>
+                        <input type="date" id="editCertStartDate" name="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCertCompletionDate">Completion Date *</label>
+                        <input type="date" id="editCertCompletionDate" name="completionDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCertDate">Issue Date *</label>
+                        <input type="date" id="editCertDate" name="issueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCertExpiryDate">Expiry Date (Optional)</label>
+                        <input type="date" id="editCertExpiryDate" name="expiryDate">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editCertDescription">Description</label>
+                    <textarea id="editCertDescription" name="description" rows="3" placeholder="Brief description of what this certificate represents"></textarea>
+                </div>
+                
+                <div class="certificate-input-options">
+                    <p><strong>Provide either a URL or upload a file (or both):</strong></p>
+                    
+                    <div class="form-group">
+                        <label for="editCertUrl">Certificate URL</label>
+                        <input type="url" id="editCertUrl" name="certificateUrl" placeholder="https://coursera.org/verify/...">
+                        <small>URL to view the certificate online</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editCertFile">Upload New Certificate File</label>
+                        <input type="file" id="editCertFile" name="certificateFile" accept=".pdf,.jpg,.jpeg,.png">
+                        <small>Accepted formats: PDF, JPG, PNG (Max: 5MB) - Leave empty to keep current file</small>
+                    </div>
+                    
+                    <div id="currentCertificateFile" class="current-file-display" style="display: none;">
+                        <label>Current Certificate File:</label>
+                        <div class="file-info">
+                            <span id="currentFileName"></span>
+                            <button type="button" onclick="viewCertificateFile()" class="btn btn-sm btn-outline-primary">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Certificate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Internship Modal -->
+    <div id="editInternshipModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Edit Internship</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editInternshipForm">
+                <input type="hidden" id="editInternId" name="internshipId">
+                <input type="hidden" id="editInternStudentId" name="studentId">
+                
+                <!-- EXACT SAME FIELDS AS STUDENT FORM -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editInternCompany">Company Name *</label>
+                        <input type="text" id="editInternCompany" name="companyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editInternPosition">Position *</label>
+                        <input type="text" id="editInternPosition" name="position" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editInternStartDate">Start Date *</label>
+                        <input type="date" id="editInternStartDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editInternEndDate">End Date</label>
+                        <input type="date" id="editInternEndDate" name="endDate">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="editInternCurrentlyWorking" name="currentlyWorking">
+                            Currently working here
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editInternLocation">Location</label>
+                    <input type="text" id="editInternLocation" name="location">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editInternDescription">Description</label>
+                    <textarea id="editInternDescription" name="description" rows="4" placeholder="Describe your role, responsibilities, and achievements..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editInternSkills">Skills Used</label>
+                    <input type="text" id="editInternSkills" name="skills" placeholder="e.g., JavaScript, React, Node.js">
+                    <small>Separate skills with commas</small>
+                </div>
+                
+                <div class="internship-documents">
+                    <h4>Current Documents</h4>
+                    <div id="currentInternshipFiles" class="current-files-display">
+                        <!-- Current files will be populated here -->
+                    </div>
+                    
+                    <h4>Upload New Documents (Optional)</h4>
+                    <div class="form-group">
+                        <label for="editInternOfferLetter">Offer Letter</label>
+                        <input type="file" id="editInternOfferLetter" name="offerLetter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <small>Upload new offer letter (PDF, JPG, PNG, DOC, DOCX - Max: 5MB) - Leave empty to keep current</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="editInternJoiningLetter">Joining Letter (Optional)</label>
+                        <input type="file" id="editInternJoiningLetter" name="joiningLetter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <small>Upload new joining confirmation letter if available - Leave empty to keep current</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Internship
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Certificate Modal -->
+    <div id="addCertificateModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Certificate for Student</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addCertificateForm">
+                <input type="hidden" id="addCertStudentId" name="studentId">
+                
+                <!-- EXACT SAME FIELDS AS STUDENT FORM -->
+                <div class="form-group">
+                    <label for="addCertTitle">Certificate Title *</label>
+                    <input type="text" id="addCertTitle" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="addCertIssuer">Issuing Organization *</label>
+                    <input type="text" id="addCertIssuer" name="issuer" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="addCertOrganization">Organization/Platform (Optional)</label>
+                    <input type="text" id="addCertOrganization" name="organization" placeholder="e.g., Coursera, NPTEL, Microsoft">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addCertStartDate">Start Date (Optional)</label>
+                        <input type="date" id="addCertStartDate" name="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="addCertCompletionDate">Completion Date *</label>
+                        <input type="date" id="addCertCompletionDate" name="completionDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addCertDate">Issue Date *</label>
+                        <input type="date" id="addCertDate" name="issueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addCertExpiryDate">Expiry Date (Optional)</label>
+                        <input type="date" id="addCertExpiryDate" name="expiryDate">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="addCertDescription">Description</label>
+                    <textarea id="addCertDescription" name="description" rows="3" placeholder="Brief description of what this certificate represents"></textarea>
+                </div>
+                
+                <div class="certificate-input-options">
+                    <p><strong>Provide either a URL or upload a file (or both):</strong></p>
+                    
+                    <div class="form-group">
+                        <label for="addCertUrl">Certificate URL</label>
+                        <input type="url" id="addCertUrl" name="certificateUrl" placeholder="https://coursera.org/verify/...">
+                        <small>URL to view the certificate online</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="addCertFile">Upload Certificate File</label>
+                        <input type="file" id="addCertFile" name="certificateFile" accept=".pdf,.jpg,.jpeg,.png">
+                        <small>Accepted formats: PDF, JPG, PNG (Max: 5MB)</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add Certificate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Internship Modal -->
+    <div id="addInternshipModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Internship for Student</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addInternshipForm">
+                <input type="hidden" id="addInternStudentId" name="studentId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addInternCompany">Company Name</label>
+                        <input type="text" id="addInternCompany" name="companyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addInternRole">Role/Position</label>
+                        <input type="text" id="addInternRole" name="position" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addInternStartDate">Start Date</label>
+                        <input type="date" id="addInternStartDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addInternEndDate">End Date</label>
+                        <input type="date" id="addInternEndDate" name="endDate">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addInternStipend">Stipend (₹)</label>
+                        <input type="number" id="addInternStipend" name="stipend" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="addInternLocation">Location</label>
+                        <input type="text" id="addInternLocation" name="location">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addInternOfferLetter">Offer Letter</label>
+                        <input type="file" id="addInternOfferLetter" name="offerLetter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                    </div>
+                    <div class="form-group">
+                        <label for="addInternJoiningLetter">Joining Letter</label>
+                        <input type="file" id="addInternJoiningLetter" name="joiningLetter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="addInternDescription">Description</label>
+                    <textarea id="addInternDescription" name="description" rows="3" placeholder="Role description and key responsibilities"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add Internship
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="addProjectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Project for Student</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addProjectForm">
+                <input type="hidden" id="addProjectStudentId" name="studentId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addProjectTitle">Project Title</label>
+                        <input type="text" id="addProjectTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addProjectType">Project Type</label>
+                        <select id="addProjectType" name="projectType" required>
+                            <option value="">Select Type</option>
+                            <option value="mini">Mini Project</option>
+                            <option value="major">Major Project</option>
+                            <option value="personal">Personal Project</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addProjectDomain">Domain</label>
+                        <input type="text" id="addProjectDomain" name="domain" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addProjectTech">Technologies</label>
+                        <input type="text" id="addProjectTech" name="technologies" placeholder="e.g., React, Node.js, MongoDB">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addProjectStartDate">Start Date</label>
+                        <input type="date" id="addProjectStartDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addProjectEndDate">End Date</label>
+                        <input type="date" id="addProjectEndDate" name="endDate">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="addProjectGithub">GitHub URL</label>
+                        <input type="url" id="addProjectGithub" name="githubUrl" placeholder="https://github.com/user/repo">
+                    </div>
+                    <div class="form-group">
+                        <label for="addProjectLive">Live URL</label>
+                        <input type="url" id="addProjectLive" name="liveUrl" placeholder="https://project-demo.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="addProjectDescription">Description</label>
+                    <textarea id="addProjectDescription" name="description" rows="4" placeholder="Project description and objectives" required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Project</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editProjectForm">
+                <input type="hidden" id="editProjectId" name="projectId">
+                <input type="hidden" id="editProjectStudentId" name="studentId">
+                
+                <!-- BASIC PROJECT FIELDS (mapping to complex model) -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editProjectTitle">Project Title *</label>
+                        <input type="text" id="editProjectTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProjectType">Project Type *</label>
+                        <select id="editProjectType" name="studentProjectType" required>
+                            <option value="">Select Type</option>
+                            <option value="personal">Personal Project</option>
+                            <option value="mini">Mini Project</option>
+                            <option value="major">Major Project</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editProjectDomain">Domain *</label>
+                        <input type="text" id="editProjectDomain" name="domain" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProjectStatus">Status</label>
+                        <select id="editProjectStatus" name="currentStatus">
+                            <option value="proposal">Proposal</option>
+                            <option value="approved">Approved</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProjectDescription">Description *</label>
+                    <textarea id="editProjectDescription" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editProjectTechnologies">Technologies Used</label>
+                        <input type="text" id="editProjectTechnologies" name="technologies">
+                        <small>Separate technologies with commas</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProjectTeamSize">Team Size</label>
+                        <input type="number" id="editProjectTeamSize" name="teamSize" min="1" max="10" value="1">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editProjectStartDate">Start Date</label>
+                        <input type="date" id="editProjectStartDate" name="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="editProjectEndDate">Expected End Date</label>
+                        <input type="date" id="editProjectEndDate" name="expectedEndDate">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editProjectGithub">GitHub URL</label>
+                        <input type="url" id="editProjectGithub" name="githubUrl">
+                    </div>
+                    <div class="form-group">
+                        <label for="editProjectLive">Live Demo URL</label>
+                        <input type="url" id="editProjectLive" name="liveUrl">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/teacher.js"></script>
+</body>
+</html>

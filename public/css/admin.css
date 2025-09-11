@@ -1,0 +1,377 @@
+/* Admin Specific Styles */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-info {
+    color: #667eea;
+    font-weight: 500;
+    margin-right: 1rem;
+}
+
+.admin-nav {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    padding: 0;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.admin-nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-nav li {
+    flex: 1;
+}
+
+.admin-nav .nav-link {
+    display: block;
+    padding: 1rem 2rem;
+    color: white;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s;
+    border-radius: 10px;
+}
+
+.admin-nav .nav-link:hover,
+.admin-nav .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.admin-main {
+    min-height: 500px;
+}
+
+.section {
+    display: none;
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.section.active {
+    display: block;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+}
+
+.stat-card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: bold;
+    display: block;
+}
+
+.quick-actions {
+    background: #f8fafc;
+    padding: 2rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.quick-actions h3 {
+    margin: 0 0 1.5rem 0;
+    color: #4a5568;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.action-buttons .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+}
+
+.action-buttons .icon {
+    font-size: 1.5rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.section-header h2 {
+    color: #4a5568;
+    margin: 0;
+}
+
+.header-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.form-control {
+    padding: 0.5rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.data-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.data-card {
+    background: #f7fafc;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s;
+}
+
+.data-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.data-card h4 {
+    margin: 0 0 1rem 0;
+    color: #2d3748;
+}
+
+.data-card .card-meta {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.data-card .card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.data-card .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Reports Grid */
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.report-card {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+}
+
+.report-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+}
+
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.report-stat {
+    text-align: center;
+}
+
+.report-stat .number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: block;
+}
+
+.report-stat .label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+/* Budget Summary */
+.budget-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.budget-card {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(237, 137, 54, 0.3);
+}
+
+.budget-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.budget-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+
+.budget-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Modal Enhancements */
+.modal[style*="block"] {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+}
+
+.modal-content {
+    max-width: 600px;
+    max-height: none;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+#studentFields .form-group {
+    margin-bottom: 1rem;
+}
+
+#studentFields .form-row {
+    margin-bottom: 0.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #48bb78;
+    box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #718096;
+    font-size: 0.875rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-nav ul {
+        flex-direction: column;
+    }
+    
+    .stats-grid,
+    .budget-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .header-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

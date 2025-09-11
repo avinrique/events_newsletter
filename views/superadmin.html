@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAdmin Dashboard - Department Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/superadmin.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>SuperAdmin Dashboard</h1>
+                <div class="header-actions">
+                    <span id="adminInfo" class="admin-info"></span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="superadmin-nav">
+            <ul>
+                <li><a href="#dashboard" class="nav-link active">Dashboard</a></li>
+                <li><a href="#departments" class="nav-link">Departments</a></li>
+                <li><a href="#designations" class="nav-link">Designations</a></li>
+                <li><a href="#admins" class="nav-link">Admin Accounts</a></li>
+            </ul>
+        </nav>
+
+        <main class="superadmin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="section active">
+                <h2>System Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Departments</h3>
+                        <span id="totalDepts" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Teacher Designations</h3>
+                        <span id="totalDesignations" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Admin Accounts</h3>
+                        <span id="totalAdmins" class="stat-number">0</span>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" data-action="createDepartment">
+                            <span class="icon">🏢</span>
+                            Create Department
+                        </button>
+                        <button class="btn btn-primary" data-action="createDesignation">
+                            <span class="icon">👨‍🏫</span>
+                            Add Designation
+                        </button>
+                        <button class="btn btn-primary" data-action="createAdmin">
+                            <span class="icon">👤</span>
+                            Create Admin
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Departments Section -->
+            <section id="departmentsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Management</h2>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="showInactiveDepts">
+                            Show Inactive
+                        </label>
+                        <button class="btn btn-primary" id="addDepartmentBtn">Add New Department</button>
+                    </div>
+                </div>
+                <div id="departmentsList" class="data-grid"></div>
+            </section>
+
+            <!-- Designations Section -->
+            <section id="designationsSection" class="section">
+                <div class="section-header">
+                    <h2>Teacher Designations</h2>
+                    <button class="btn btn-primary" id="addDesignationBtn">Add New Designation</button>
+                </div>
+                <div id="designationsList" class="data-grid"></div>
+            </section>
+
+            <!-- Admin Accounts Section -->
+            <section id="adminsSection" class="section">
+                <div class="section-header">
+                    <h2>Admin Accounts</h2>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="showInactiveAdmins">
+                            Show Inactive
+                        </label>
+                        <button class="btn btn-primary" id="addAdminBtn">Create Admin Account</button>
+                    </div>
+                </div>
+                <div id="adminsList" class="data-grid"></div>
+            </section>
+        </main>
+
+        <!-- Create Department Modal -->
+        <div id="createDepartmentModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeDepartmentModal">&times;</span>
+                <h3>Create New Department</h3>
+                <form id="createDepartmentForm">
+                    <div class="form-group">
+                        <label for="deptName">Department Name:</label>
+                        <input type="text" id="deptName" name="name" required 
+                               placeholder="e.g., Computer Science and Engineering">
+                    </div>
+                    <div class="form-group">
+                        <label for="deptCode">Department Code:</label>
+                        <input type="text" id="deptCode" name="code" required 
+                               placeholder="e.g., CSE" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label for="deptDescription">Description:</label>
+                        <textarea id="deptDescription" name="description" required
+                                  placeholder="Brief description of the department"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Department</button>
+                        <button type="button" class="btn btn-secondary" id="cancelDepartmentBtn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Designation Modal -->
+        <div id="createDesignationModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeDesignationModal">&times;</span>
+                <h3>Add Teacher Designation</h3>
+                <form id="createDesignationForm">
+                    <div class="form-group">
+                        <label for="designationName">Designation Name:</label>
+                        <input type="text" id="designationName" name="name" required 
+                               placeholder="e.g., Professor, Assistant Professor, HOD">
+                    </div>
+                    <div class="form-group">
+                        <label for="designationLevel">Hierarchy Level:</label>
+                        <select id="designationLevel" name="level" required>
+                            <option value="">Select Level</option>
+                            <option value="1">Level 1 (Highest - HOD)</option>
+                            <option value="2">Level 2 (Professor)</option>
+                            <option value="3">Level 3 (Associate Professor)</option>
+                            <option value="4">Level 4 (Assistant Professor)</option>
+                            <option value="5">Level 5 (Lecturer)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="designationDesc">Description (Optional):</label>
+                        <textarea id="designationDesc" name="description"
+                                  placeholder="Brief description of this designation"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Designation</button>
+                        <button type="button" class="btn btn-secondary" id="cancelDesignationBtn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Admin Modal -->
+        <div id="createAdminModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeAdminModal">&times;</span>
+                <h3>Create Admin Account</h3>
+                <form id="createAdminForm">
+                    <div class="form-group">
+                        <label for="adminName">Full Name:</label>
+                        <input type="text" id="adminName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminEmail">Email:</label>
+                        <input type="email" id="adminEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Initial Password:</label>
+                        <input type="password" id="adminPassword" name="password" required minlength="6">
+                        <small>Admin can change this after first login</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Admin</button>
+                        <button type="button" class="btn btn-secondary" id="cancelAdminBtn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/superadmin.js"></script>
+</body>
+</html>

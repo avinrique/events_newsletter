@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Department Management System</h1>
+            <nav id="mainNav" style="display: none;">
+                <ul>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#users">Users</a></li>
+                    <li><a href="#departments">Departments</a></li>
+                    <li><a href="#clubs">Clubs</a></li>
+                    <li><a href="#events">Events</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#profile">Profile</a></li>
+                    <li><a href="#" id="logoutBtn">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Login Section -->
+            <div id="loginSection" class="section">
+                <div class="login-container">
+                    <h2>Login</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password:</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </form>
+                    <div id="loginError" class="error-message"></div>
+                    <div class="init-admin">
+                        <p>First time? <a href="#" id="initAdminLink">Initialize Super Admin</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Initialize Super Admin -->
+            <div id="initAdminSection" class="section" style="display: none;">
+                <div class="login-container">
+                    <h2>Initialize Super Admin</h2>
+                    <form id="initAdminForm">
+                        <div class="form-group">
+                            <label for="adminName">Name:</label>
+                            <input type="text" id="adminName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminEmail">Email:</label>
+                            <input type="email" id="adminEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password:</label>
+                            <input type="password" id="adminPassword" name="password" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Super Admin</button>
+                        <button type="button" class="btn btn-secondary" id="backToLoginBtn">Back to Login</button>
+                    </form>
+                    <div id="initError" class="error-message"></div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section" style="display: none;">
+                <h2>Dashboard</h2>
+                <div id="userInfo" class="user-info"></div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Quick Actions</h3>
+                        <div id="quickActions"></div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Statistics</h3>
+                        <div id="statistics"></div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Recent Activities</h3>
+                        <div id="recentActivities"></div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Pending Approvals</h3>
+                        <div id="pendingApprovals"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="usersSection" class="section" style="display: none;">
+                <h2>User Management</h2>
+                <div class="actions-bar">
+                    <button class="btn btn-primary" id="createUserBtn">Create User</button>
+                    <input type="text" id="userSearch" placeholder="Search users...">
+                </div>
+                <div id="usersList" class="data-grid"></div>
+                
+                <!-- Create User Modal -->
+                <div id="createUserModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close" id="closeCreateUserModal">&times;</span>
+                        <h3>Create New User</h3>
+                        <form id="createUserForm">
+                            <div class="form-group">
+                                <label for="userName">Name:</label>
+                                <input type="text" id="userName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="userEmail">Email:</label>
+                                <input type="email" id="userEmail" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="userPassword">Password:</label>
+                                <input type="password" id="userPassword" name="password" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="userRole">Role:</label>
+                                <select id="userRole" name="role" required>
+                                    <option value="">Select Role</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="departmentGroup" style="display: none;">
+                                <label for="userDepartment">Department:</label>
+                                <select id="userDepartment" name="department">
+                                    <option value="">Select Department</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="designationGroup" style="display: none;">
+                                <label for="userDesignation">Designation:</label>
+                                <select id="userDesignation" name="designation">
+                                    <option value="">Select Designation</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="studentFields" style="display: none;">
+                                <label for="userUSN">USN:</label>
+                                <input type="text" id="userUSN" name="usn">
+                                <label for="userRoll">Roll Number:</label>
+                                <input type="text" id="userRoll" name="rollNumber">
+                                <label for="userSemester">Semester:</label>
+                                <input type="number" id="userSemester" name="semester" min="1" max="8">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create User</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Departments Section -->
+            <div id="departmentsSection" class="section" style="display: none;">
+                <h2>Department Management</h2>
+                <div class="actions-bar">
+                    <button class="btn btn-primary" id="createDeptBtn">Create Department</button>
+                </div>
+                <div id="departmentsList" class="data-grid"></div>
+            </div>
+
+            <!-- Other sections will be similar -->
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

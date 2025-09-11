@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Teacher Event Upload</title>
+</head>
+<body>
+    <h1>Test Teacher Event Upload</h1>
+    
+    <form id="testForm" enctype="multipart/form-data">
+        <label>Event Date:</label>
+        <input type="date" name="eventDate" required><br><br>
+        
+        <label>Document Images:</label>
+        <input type="file" name="documentImages" multiple accept="image/*"><br><br>
+        
+        <label>Regular Images:</label>
+        <input type="file" name="images" multiple accept="image/*"><br><br>
+        
+        <button type="submit">Test Upload</button>
+    </form>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            formData.append('title', 'Test Event');
+            formData.append('description', 'Test Description');
+            
+            console.log('Uploading form data:', formData);
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/teacher-events', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                console.log('Upload result:', result);
+                alert(result.success ? 'Upload successful!' : 'Upload failed: ' + result.message);
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Upload error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

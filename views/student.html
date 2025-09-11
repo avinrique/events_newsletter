@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Department Management System</title>
+    <link rel="stylesheet" href="/css/student.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-user-graduate"></i> Student Dashboard</h1>
+                <div class="user-info">
+                    <span id="studentInfo">Loading...</span>
+                    <button id="logoutBtn" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul class="nav-menu">
+                <li><a href="#dashboard" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#profile" class="nav-link"><i class="fas fa-user"></i> My Profile</a></li>
+                <li><a href="#clubs" class="nav-link"><i class="fas fa-users"></i> Clubs</a></li>
+                <li><a href="#events" class="nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                <li><a href="#projects" class="nav-link"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                <li><a href="#certificates" class="nav-link"><i class="fas fa-certificate"></i> Certificates</a></li>
+                <li><a href="#internships" class="nav-link"><i class="fas fa-briefcase"></i> Internships</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="section active">
+                <div class="section-header">
+                    <h2>My Dashboard</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon clubs"><i class="fas fa-users"></i></div>
+                        <div class="stat-content">
+                            <h3 id="myClubs">0</h3>
+                            <p>My Clubs</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon events"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="stat-content">
+                            <h3 id="myEvents">0</h3>
+                            <p>Events Attended</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon projects"><i class="fas fa-project-diagram"></i></div>
+                        <div class="stat-content">
+                            <h3 id="myProjects">0</h3>
+                            <p>Projects</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon certificates"><i class="fas fa-certificate"></i></div>
+                        <div class="stat-content">
+                            <h3 id="myCertificates">0</h3>
+                            <p>Certificates</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
+                        <div id="recentNotifications" class="notifications-list">
+                            <!-- Notifications will load here -->
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-calendar-check"></i> Upcoming Events</h3>
+                        <div id="upcomingEvents" class="events-list">
+                            <!-- Upcoming events will load here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profileSection" class="section">
+                <div class="section-header">
+                    <h2>My Profile</h2>
+                    <button id="editProfileBtn" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div id="profileInfo">
+                            <!-- Profile information will load here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clubs Section -->
+            <section id="clubsSection" class="section">
+                <div class="section-header">
+                    <h2>Clubs</h2>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="my">My Clubs</button>
+                    <button class="tab-btn" data-tab="available">Available Clubs</button>
+                    <button class="tab-btn" data-tab="pending">Pending Approvals</button>
+                </div>
+                <div class="tab-content active" id="myClubsTab">
+                    <div id="myClubsList" class="data-grid">
+                        <!-- My clubs will load here -->
+                    </div>
+                </div>
+                <div class="tab-content" id="availableClubsTab">
+                    <div id="availableClubsList" class="data-grid">
+                        <!-- Available clubs will load here -->
+                    </div>
+                </div>
+                <div class="tab-content" id="pendingClubsTab">
+                    <div id="pendingClubsList" class="data-grid">
+                        <!-- Pending club approvals will load here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Events Section -->
+            <section id="eventsSection" class="section">
+                <div class="section-header">
+                    <h2>Events</h2>
+                    <button id="addEventBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add External Event
+                    </button>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="upcoming">College Events</button>
+                    <button class="tab-btn" data-tab="my">My Participations</button>
+                </div>
+                <div class="tab-content active" id="upcomingEventsTab">
+                    <div id="upcomingEventsList" class="data-grid">
+                        <!-- College events will load here -->
+                    </div>
+                </div>
+                <div class="tab-content" id="myEventsTab">
+                    <div id="myEventsList" class="data-grid">
+                        <!-- External event participations will load here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projectsSection" class="section">
+                <div class="section-header">
+                    <h2>My Projects</h2>
+                    <button id="addProjectBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Project
+                    </button>
+                </div>
+                <div id="projectsList" class="data-grid">
+                    <!-- Projects will load here -->
+                </div>
+            </section>
+
+            <!-- Certificates Section -->
+            <section id="certificatesSection" class="section">
+                <div class="section-header">
+                    <h2>My Certificates</h2>
+                    <button id="uploadCertificateBtn" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Certificate
+                    </button>
+                </div>
+                <div id="certificatesList" class="data-grid">
+                    <!-- Certificates will load here -->
+                </div>
+            </section>
+
+            <!-- Internships Section -->
+            <section id="internshipsSection" class="section">
+                <div class="section-header">
+                    <h2>My Internships</h2>
+                    <button id="addInternshipBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Internship
+                    </button>
+                </div>
+                <div id="internshipsList" class="data-grid">
+                    <!-- Internships will load here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeProfileModal">&times;</span>
+            <h3>Edit Profile</h3>
+            <form id="editProfileForm" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileImage">Profile Image:</label>
+                        <input type="file" id="profileImage" name="profileImage" accept="image/*">
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileName">Name:</label>
+                        <input type="text" id="profileName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileContact">Contact Number:</label>
+                        <input type="tel" id="profileContact" name="contactNumber">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileEmail">Email:</label>
+                        <input type="email" id="profileEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileSemester">Semester:</label>
+                        <select id="profileSemester" name="semester">
+                            <option value="">Select Semester</option>
+                            <option value="1">1st Semester</option>
+                            <option value="2">2nd Semester</option>
+                            <option value="3">3rd Semester</option>
+                            <option value="4">4th Semester</option>
+                            <option value="5">5th Semester</option>
+                            <option value="6">6th Semester</option>
+                            <option value="7">7th Semester</option>
+                            <option value="8">8th Semester</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileProctor">Proctor:</label>
+                        <select id="profileProctor" name="proctor">
+                            <option value="">Select Proctor</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileClassTeacher">Class Teacher:</label>
+                        <select id="profileClassTeacher" name="classTeacher">
+                            <option value="">Select Class Teacher</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                    <button type="button" id="cancelProfileBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Certificate Modal -->
+    <div id="uploadCertificateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeCertificateModal">&times;</span>
+            <h3>Upload Certificate</h3>
+            <form id="uploadCertificateForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="certificateTitle">Certificate Title:</label>
+                    <input type="text" id="certificateTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificateIssuer">Issuing Organization:</label>
+                    <input type="text" id="certificateIssuer" name="issuer" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificateOrganization">Organization/Platform (Optional):</label>
+                    <input type="text" id="certificateOrganization" name="organization" placeholder="e.g., Coursera, NPTEL, Microsoft">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="certificateStartDate">Start Date (Optional):</label>
+                        <input type="date" id="certificateStartDate" name="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="certificateCompletionDate">Completion Date:</label>
+                        <input type="date" id="certificateCompletionDate" name="completionDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="certificateDate">Issue Date:</label>
+                        <input type="date" id="certificateDate" name="issueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificateExpiry">Expiry Date (Optional):</label>
+                        <input type="date" id="certificateExpiry" name="expiryDate">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="certificateDescription">Description:</label>
+                    <textarea id="certificateDescription" name="description" rows="3" placeholder="Brief description of what this certificate represents"></textarea>
+                </div>
+                
+                <div class="certificate-input-options">
+                    <p><strong>Provide either a URL or upload a file (or both):</strong></p>
+                    
+                    <div class="form-group">
+                        <label for="certificateUrl">Certificate URL:</label>
+                        <input type="url" id="certificateUrl" name="certificateUrl" placeholder="https://coursera.org/verify/...">
+                        <small>URL to view the certificate online</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificateFile">Or Upload Certificate File:</label>
+                        <input type="file" id="certificateFile" name="certificateFile" accept=".pdf,.jpg,.jpeg,.png">
+                        <small>Accepted formats: PDF, JPG, PNG (Max: 5MB)</small>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Upload Certificate</button>
+                    <button type="button" id="cancelCertificateBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Internship Modal -->
+    <div id="addInternshipModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeInternshipModal">&times;</span>
+            <h3>Add Internship</h3>
+            <form id="addInternshipForm" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="companyName">Company Name:</label>
+                        <input type="text" id="companyName" name="companyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="position">Position:</label>
+                        <input type="text" id="position" name="position" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Start Date:</label>
+                        <input type="date" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date:</label>
+                        <input type="date" id="endDate" name="endDate">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="currentlyWorking" name="currentlyWorking">
+                            Currently working here
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" rows="4" placeholder="Describe your role, responsibilities, and achievements..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="skills">Skills Used:</label>
+                    <input type="text" id="skills" name="skills" placeholder="e.g., JavaScript, React, Node.js">
+                    <small>Separate skills with commas</small>
+                </div>
+                
+                <div class="internship-documents">
+                    <h4>Documents</h4>
+                    <div class="form-group">
+                        <label for="offerLetter">Offer Letter:</label>
+                        <input type="file" id="offerLetter" name="offerLetter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        <small>Upload your internship offer letter (PDF, JPG, PNG, DOC, DOCX - Max: 5MB)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="joiningLetter">Joining Letter (Optional):</label>
+                        <input type="file" id="joiningLetter" name="joiningLetter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <small>Upload joining confirmation letter if available</small>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Internship</button>
+                    <button type="button" id="cancelInternshipBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="addProjectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeProjectModal">&times;</span>
+            <h3>Add Project</h3>
+            <form id="addProjectForm" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectTitle">Project Title:</label>
+                        <input type="text" id="projectTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectType">Project Type:</label>
+                        <select id="projectType" name="projectType" required>
+                            <option value="">Select Type</option>
+                            <option value="personal">Personal Project (Auto-approved, solo or team)</option>
+                            <option value="mini">Mini Project (Requires approval, solo or team)</option>
+                            <option value="major">Major Project (Requires approval, solo or team)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectDomain">Domain:</label>
+                        <input type="text" id="projectDomain" name="domain" required placeholder="e.g., Web Development, AI/ML, Mobile App">
+                    </div>
+                    <div class="form-group">
+                        <label for="projectStatus">Status:</label>
+                        <select id="projectStatus" name="status">
+                            <option value="ongoing">Ongoing</option>
+                            <option value="completed">Completed</option>
+                            <option value="planned">Planned</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Teacher Involvement Section (for Personal Projects) -->
+                <div id="teacherInvolvementSection" class="form-section" style="display: none;">
+                    <h4>Teacher Involvement</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="hasTeacherMentor" name="hasTeacherMentor">
+                            I have a teacher mentor for this project
+                        </label>
+                        <small>Check this if a teacher is guiding or supervising your personal project</small>
+                    </div>
+                </div>
+
+                <!-- Teacher Mentor Selection -->
+                <div id="mentorSection" class="form-section" style="display: none;">
+                    <h4>Teacher Mentor <span style="color: #666; font-weight: normal; font-size: 0.85em;">(Optional)</span></h4>
+                    <div class="form-group">
+                        <label for="teacherMentor">Select Teacher Mentor:</label>
+                        <select id="teacherMentor" name="teacherMentor">
+                            <option value="">Loading teachers...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mentorReason">Why you chose this mentor? (Optional):</label>
+                        <textarea id="mentorReason" name="mentorReason" rows="2" placeholder="Brief explanation of why you chose this mentor..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectDescription">Description:</label>
+                    <textarea id="projectDescription" name="description" rows="4" placeholder="Describe your project, its purpose, and key features..."></textarea>
+                </div>
+                
+                <!-- Team Members Section (for Mini/Major Projects) -->
+                <div id="teamMembersSection" class="form-section" style="display: none;">
+                    <h4>Team Members</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="teamChoice" value="solo" checked>
+                            I'm working alone
+                        </label>
+                        <br>
+                        <label>
+                            <input type="radio" name="teamChoice" value="team">
+                            I'm working with a team
+                        </label>
+                    </div>
+                    
+                    <div id="teamMembersList" style="display: none;">
+                        <div class="form-group">
+                            <label>Add Team Members:</label>
+                            <div id="selectedTeamMembers"></div>
+                            <select id="teamMemberSelect">
+                                <option value="">Select a team member...</option>
+                            </select>
+                            <button type="button" id="addTeamMemberBtn" class="btn btn-secondary">Add Member</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectTechnologies">Technologies Used:</label>
+                        <input type="text" id="projectTechnologies" name="technologies" placeholder="e.g., React, Node.js, MongoDB">
+                        <small>Separate technologies with commas</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectTeamSize">Team Size:</label>
+                        <input type="number" id="projectTeamSize" name="teamSize" min="1" max="10" value="1" readonly>
+                        <small>Auto-calculated based on team members</small>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectStartDate">Start Date:</label>
+                        <input type="date" id="projectStartDate" name="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="projectEndDate">End Date (if completed):</label>
+                        <input type="date" id="projectEndDate" name="endDate">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectGithub">GitHub URL:</label>
+                        <input type="url" id="projectGithub" name="githubUrl" placeholder="https://github.com/username/repo">
+                    </div>
+                    <div class="form-group">
+                        <label for="projectLive">Live Demo URL:</label>
+                        <input type="url" id="projectLive" name="liveUrl" placeholder="https://yourproject.com">
+                    </div>
+                </div>
+
+                <!-- Project Files and Links -->
+                <div class="form-section">
+                    <h4>Project Files & Documentation</h4>
+                    
+                    <div class="form-group">
+                        <label for="projectFiles">Upload Project Files (Optional):</label>
+                        <input type="file" id="projectFiles" name="projectFiles" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.zip,.rar">
+                        <small>Supported: Images, Videos, Documents, Archives (Max 10MB per file, 5 files max)</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="driveLink">Google Drive Link (Optional):</label>
+                            <input type="url" id="driveLink" name="driveLink" placeholder="https://drive.google.com/...">
+                            <small>Share link to project folder, demo video, or documentation</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="youtubeLink">YouTube Demo Link (Optional):</label>
+                            <input type="url" id="youtubeLink" name="youtubeLink" placeholder="https://youtube.com/watch?v=...">
+                            <small>Link to project demo or explanation video</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="documentationUrl">Additional Documentation URL (Optional):</label>
+                        <input type="url" id="documentationUrl" name="documentationUrl" placeholder="https://docs.google.com/... or other documentation link">
+                        <small>Link to detailed documentation, report, or presentation</small>
+                    </div>
+                </div>
+                
+                <!-- Budget Request Section -->
+                <div class="form-section">
+                    <h4>Budget Request (Optional)</h4>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="requestBudget" name="requestBudget">
+                            I would like to request funding for this project
+                        </label>
+                        <small>Check this if you need financial support for your project</small>
+                    </div>
+                    
+                    <div id="budgetRequestSection" class="budget-section" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="budgetAmount">Requested Amount (₹):</label>
+                                <input type="number" id="budgetAmount" name="budgetAmount" min="100" max="50000" step="100">
+                                <small>Maximum ₹50,000 for student projects</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="budgetCategory">Primary Category:</label>
+                                <select id="budgetCategory" name="budgetCategory">
+                                    <option value="">Select Category</option>
+                                    <option value="equipment">Equipment/Hardware</option>
+                                    <option value="software">Software/Licenses</option>
+                                    <option value="materials">Raw Materials</option>
+                                    <option value="services">Professional Services</option>
+                                    <option value="travel">Travel/Transportation</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="budgetJustification">Brief Justification:</label>
+                            <textarea id="budgetJustification" name="budgetJustification" rows="3" placeholder="Briefly explain why you need this funding and how it will be used..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="budgetDocument">Budget Justification Document (PDF):</label>
+                            <input type="file" id="budgetDocument" name="budgetDocument" accept=".pdf">
+                            <small>Upload a detailed PDF explaining your budget requirements, cost breakdown, and justification</small>
+                        </div>
+                        
+                        <div class="budget-info">
+                            <h5>Budget Approval Process:</h5>
+                            <div class="approval-flow">
+                                <div class="flow-step">
+                                    <i class="fas fa-user-graduate"></i>
+                                    <span>1. Student Request</span>
+                                </div>
+                                <div class="flow-arrow">→</div>
+                                <div class="flow-step">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span>2. Teacher Review</span>
+                                </div>
+                                <div class="flow-arrow">→</div>
+                                <div class="flow-step">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>3. HOD Final Approval</span>
+                                </div>
+                            </div>
+                            <p class="approval-note">
+                                <strong>Note:</strong> Teachers can approve your project but may reject or modify the budget request. 
+                                Final budget approval requires HOD authorization.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Project</button>
+                    <button type="button" id="cancelProjectBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add External Event Modal -->
+    <div id="addEventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeEventModal">&times;</span>
+            <h3>Add External Event Participation</h3>
+            <form id="addEventForm" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventName">Event Name:</label>
+                        <input type="text" id="eventName" name="eventName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventType">Event Type:</label>
+                        <select id="eventType" name="eventType" required>
+                            <option value="">Select Type</option>
+                            <option value="hackathon">Hackathon</option>
+                            <option value="coding-competition">Coding Competition</option>
+                            <option value="technical-competition">Technical Competition</option>
+                            <option value="conference">Conference</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="seminar">Seminar</option>
+                            <option value="webinar">Webinar</option>
+                            <option value="bootcamp">Bootcamp</option>
+                            <option value="certification-program">Certification Program</option>
+                            <option value="innovation-contest">Innovation Contest</option>
+                            <option value="startup-competition">Startup Competition</option>
+                            <option value="research-conference">Research Conference</option>
+                            <option value="networking-event">Networking Event</option>
+                            <option value="career-fair">Career Fair</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="organizerName">Organizer:</label>
+                        <input type="text" id="organizerName" name="organizer[name]" required placeholder="Company, University, or Organization name">
+                    </div>
+                    <div class="form-group">
+                        <label for="participationType">Participation:</label>
+                        <select id="participationType" name="participationType" required>
+                            <option value="">Select Type</option>
+                            <option value="individual">Individual</option>
+                            <option value="team">Team</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventStartDate">Start Date:</label>
+                        <input type="date" id="eventStartDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventEndDate">End Date (if multi-day):</label>
+                        <input type="date" id="eventEndDate" name="endDate">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="durationDays">Duration (Days):</label>
+                        <input type="number" id="durationDays" name="durationDays" required min="1" max="365" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventLocation">Location/Platform:</label>
+                        <input type="text" id="eventLocation" name="location[venue]" placeholder="e.g., Online, Mumbai, Zoom Platform">
+                    </div>
+                </div>
+                
+                <!-- Team Details (shown when team is selected) -->
+                <div id="teamDetailsSection" class="form-section" style="display: none;">
+                    <h4>Team Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teamName">Team Name:</label>
+                            <input type="text" id="teamName" name="teamDetails[teamName]">
+                        </div>
+                        <div class="form-group">
+                            <label for="teamSize">Team Size:</label>
+                            <input type="number" id="teamSize" name="teamDetails[teamSize]" min="2" max="20">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="teamRole">Your Role in Team:</label>
+                        <input type="text" id="teamRole" name="teamDetails[teamRole]" placeholder="e.g., Team Leader, Developer, Designer">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="eventDescription">Description:</label>
+                    <textarea id="eventDescription" name="description" rows="3" placeholder="Brief description of the event and your participation..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventAchievement">Achievement (if any):</label>
+                        <select id="eventAchievement" name="outcome[achievement]">
+                            <option value="">Select Achievement</option>
+                            <option value="winner">Winner</option>
+                            <option value="first-place">First Place</option>
+                            <option value="second-place">Second Place</option>
+                            <option value="third-place">Third Place</option>
+                            <option value="runner-up">Runner-up</option>
+                            <option value="finalist">Finalist</option>
+                            <option value="semi-finalist">Semi-finalist</option>
+                            <option value="honorable-mention">Honorable Mention</option>
+                            <option value="special-recognition">Special Recognition</option>
+                            <option value="participant">Participant</option>
+                            <option value="completion-certificate">Completion Certificate</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventRank">Rank (if applicable):</label>
+                        <input type="number" id="eventRank" name="outcome[rank]" min="1">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Event Participation</button>
+                    <button type="button" id="cancelEventBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/student.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Department Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>Admin Dashboard</h1>
+                <div class="header-actions">
+                    <span id="adminInfo" class="admin-info"></span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <ul>
+                <li><a href="#dashboard" class="nav-link active">Dashboard</a></li>
+                <li><a href="#users" class="nav-link">User Management</a></li>
+                <li><a href="#reports" class="nav-link">Department Reports</a></li>
+                <li><a href="#budgets" class="nav-link">Budget Overview</a></li>
+            </ul>
+        </nav>
+
+        <main class="admin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="section active">
+                <h2>Institution Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total HODs</h3>
+                        <span id="totalHODs" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Teachers</h3>
+                        <span id="totalTeachers" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Students</h3>
+                        <span id="totalStudents" class="stat-number">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Departments</h3>
+                        <span id="activeDepartments" class="stat-number">0</span>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" data-action="createTeacher">
+                            <span class="icon">👨‍🏫</span>
+                            Create Teacher
+                        </button>
+                        <button class="btn btn-primary" data-action="createStudent">
+                            <span class="icon">🎓</span>
+                            Create Student
+                        </button>
+                        <button class="btn btn-primary" data-action="assignHOD">
+                            <span class="icon">🏢</span>
+                            Assign HOD
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="usersSection" class="section">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <div class="header-controls">
+                        <select id="roleFilter" class="form-control">
+                            <option value="">All Roles</option>
+                            <option value="hod">HODs</option>
+                            <option value="teacher">Teachers</option>
+                            <option value="student">Students</option>
+                        </select>
+                        <select id="deptFilter" class="form-control">
+                            <option value="">All Departments</option>
+                        </select>
+                        <input type="text" id="userSearch" class="form-control" placeholder="Search users...">
+                        <button class="btn btn-primary" id="addUserBtn">Add New User</button>
+                    </div>
+                </div>
+                <div id="usersList" class="data-grid"></div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reportsSection" class="section">
+                <div class="section-header">
+                    <h2>Department Reports</h2>
+                    <button class="btn btn-primary" id="generateAllReportsBtn">Generate All Reports</button>
+                </div>
+                <div id="reportsList" class="reports-grid"></div>
+            </section>
+
+            <!-- Budgets Section -->
+            <section id="budgetsSection" class="section">
+                <div class="section-header">
+                    <h2>Budget Overview</h2>
+                    <div class="budget-controls">
+                        <select id="budgetYearFilter" class="form-control">
+                            <option value="">All Years</option>
+                        </select>
+                        <select id="budgetDeptFilter" class="form-control">
+                            <option value="">All Departments</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="budget-summary">
+                    <div class="budget-card">
+                        <h4>Total Requested</h4>
+                        <span id="totalRequested" class="budget-amount">₹0</span>
+                    </div>
+                    <div class="budget-card">
+                        <h4>Total Approved</h4>
+                        <span id="totalApproved" class="budget-amount">₹0</span>
+                    </div>
+                    <div class="budget-card">
+                        <h4>Total Utilized</h4>
+                        <span id="totalUtilized" class="budget-amount">₹0</span>
+                    </div>
+                </div>
+                <div id="budgetsList" class="data-grid"></div>
+            </section>
+        </main>
+
+        <!-- Create User Modal -->
+        <div id="createUserModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeUserModal">&times;</span>
+                <h3>Create New User</h3>
+                <form id="createUserForm">
+                    <div class="form-group">
+                        <label for="userRole">User Role:</label>
+                        <select id="userRole" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="student">Student</option>
+                        </select>
+                        <small style="color: #666; font-size: 0.9em; display: block; margin-top: 0.5rem;">
+                            💡 To create HOD: First create a Teacher, then use "Assign HOD" function.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Full Name:</label>
+                        <input type="text" id="userName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email:</label>
+                        <input type="email" id="userEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Initial Password:</label>
+                        <input type="password" id="userPassword" name="password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="userDepartment">Department:</label>
+                        <select id="userDepartment" name="department" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="designationGroup" style="display: none;">
+                        <label for="userDesignation">Designation:</label>
+                        <select id="userDesignation" name="designation">
+                            <option value="">Select Designation</option>
+                        </select>
+                    </div>
+                    <div id="studentFields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="userUSN">USN:</label>
+                                <input type="text" id="userUSN" name="usn">
+                            </div>
+                            <div class="form-group">
+                                <label for="tempUSN">Temp USN:</label>
+                                <input type="text" id="tempUSN" name="tempUSN">
+                                <small>Use if permanent USN not available</small>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="userRoll">Roll Number:</label>
+                                <input type="text" id="userRoll" name="rollNumber">
+                            </div>
+                            <div class="form-group">
+                                <label for="userSemester">Semester:</label>
+                                <select id="userSemester" name="semester">
+                                    <option value="">Select Semester</option>
+                                    <option value="1">1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                    <option value="3">3rd Semester</option>
+                                    <option value="4">4th Semester</option>
+                                    <option value="5">5th Semester</option>
+                                    <option value="6">6th Semester</option>
+                                    <option value="7">7th Semester</option>
+                                    <option value="8">8th Semester</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                        <button type="button" class="btn btn-secondary" id="cancelUserBtn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assign HOD Modal -->
+        <div id="assignHODModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeHODModal">&times;</span>
+                <h3>Assign HOD to Department</h3>
+                <form id="assignHODForm">
+                    <div class="form-group">
+                        <label for="hodDepartment">Department:</label>
+                        <select id="hodDepartment" name="departmentId" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hodTeacher">Teacher to Assign:</label>
+                        <select id="hodTeacher" name="userId" required>
+                            <option value="">Select Teacher</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Assign HOD</button>
+                        <button type="button" class="btn btn-secondary" id="cancelHODBtn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>

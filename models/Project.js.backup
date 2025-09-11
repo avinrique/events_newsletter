@@ -1,0 +1,129 @@
+const mongoose = require('mongoose');
+
+const projectSchema = new mongoose.Schema({
+    // STUDENT INPUT FIELDS (matching student form exactly)
+    title: {
+        type: String,
+        required: [true, 'Please provide project title'],
+        trim: true,
+        maxlength: 200
+    },
+    projectType: {
+        type: String,
+        required: [true, 'Please provide project type'],
+        enum: ['personal', 'mini', 'major']
+    },
+    domain: {
+        type: String,
+        required: [true, 'Please provide domain'],
+        trim: true
+    },
+    projectStatus: {
+        type: String,
+        enum: ['ongoing', 'completed', 'planned'],
+        default: 'ongoing'
+    },
+    description: {
+        type: String,
+        maxlength: 1000
+    },
+    technologies: {
+        type: String,
+        trim: true
+    },
+    startDate: {
+        type: Date
+    },
+    endDate: {
+        type: Date
+    },
+    githubUrl: {
+        type: String,
+        trim: true
+    },
+    liveUrl: {
+        type: String,
+        trim: true
+    },
+    teamSize: {
+        type: Number,
+        default: 1,
+        min: 1,
+        max: 10
+    },
+    
+    // TEACHER MENTOR FIELDS
+    hasTeacherMentor: {
+        type: Boolean,
+        default: false
+    },
+    teacherMentor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    mentorReason: {
+        type: String,
+        maxlength: 500
+    },
+    
+    // FILE ATTACHMENTS
+    files: {
+        projectFiles: [{
+            fileName: String,
+            fileUrl: String,
+            fileType: String,
+            fileSize: Number,
+            uploadDate: {
+                type: Date,
+                default: Date.now
+            }
+        }]
+    },
+    
+    // SYSTEM FIELDS
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    ownerType: {
+        type: String,
+        enum: ['student', 'teacher'],
+        required: true
+    },
+    uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    department: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department',
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    approvalDate: Date,
+    rejectedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    rejectionDate: Date,
+    rejectionReason: String
+}, {
+    timestamps: true
+});
+
+// Indexes for performance
+projectSchema.index({ owner: 1, status: 1 });
+projectSchema.index({ department: 1, status: 1 });
+projectSchema.index({ uploadedBy: 1 });
+
+module.exports = mongoose.model('Project', projectSchema);
