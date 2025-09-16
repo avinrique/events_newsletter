@@ -607,12 +607,12 @@ async function loadMyProjects() {
                     <div class="project-title-section">
                         <h4 class="project-title">${project.title}</h4>
                         <div class="project-badges">
-                            <span class="project-type-badge ${project.projectType}">${project.projectType.toUpperCase()}</span>
+                            <span class="project-type-badge ${project.projectType || 'unknown'}">${(project.projectType || 'project').toUpperCase()}</span>
                             ${!project.isCreator ? '<span class="team-project-badge">Team Project</span>' : ''}
                         </div>
                     </div>
                     <div class="project-status-section">
-                        <span class="project-status status-${project.status}">${project.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                        <span class="project-status status-${project.approvalStatus}">${(project.approvalStatus || 'pending').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                         ${project.progress ? `<div class="progress-bar"><div class="progress-fill" style="width: ${project.progress.percentage || 0}%"></div></div>` : ''}
                     </div>
                 </div>
@@ -630,11 +630,11 @@ async function loadMyProjects() {
                             </div>
                         ` : ''}
                         
-                        ${project.technologies && project.technologies.length > 0 ? `
+                        ${project.technicalDetails && project.technicalDetails.technologies && project.technicalDetails.technologies.length > 0 ? `
                             <div class="detail-row">
                                 <span class="detail-label">Technologies:</span>
                                 <div class="tech-tags">
-                                    ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                                    ${project.technicalDetails.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
                                 </div>
                             </div>
                         ` : ''}
@@ -714,12 +714,12 @@ async function loadMyProjects() {
                         <button data-action="view" data-project-id="${project._id}" class="btn btn-view">
                             <i class="fas fa-eye"></i> View Details
                         </button>
-                        ${(project.isCreator && (project.status === 'pending-approval' || project.status === 'rejected')) ? `
+                        ${(project.isCreator && (project.approvalStatus === 'pending-approval' || project.approvalStatus === 'rejected')) ? `
                             <button data-action="edit" data-project-id="${project._id}" class="btn btn-edit">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
                         ` : ''}
-                        ${(project.isCreator && (project.status === 'pending-approval' || project.status === 'rejected')) ? `
+                        ${(project.isCreator && (project.approvalStatus === 'pending-approval' || project.approvalStatus === 'rejected')) ? `
                             <button data-action="delete" data-project-id="${project._id}" class="btn btn-delete">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
@@ -1406,7 +1406,7 @@ async function showProjectDetails(projectId) {
                     <h2>${project.title}</h2>
                     <div class="project-status-badges">
                         <span class="project-type-badge ${project.studentProjectType}">${project.studentProjectType.toUpperCase()}</span>
-                        <span class="project-status status-${project.status}">${project.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                        <span class="project-status status-${project.approvalStatus}">${(project.approvalStatus || 'pending').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                     </div>
                 </div>
                 

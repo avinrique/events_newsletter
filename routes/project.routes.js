@@ -11,7 +11,8 @@ const {
     updateProject,
     deleteProject,
     approveProject,
-    rejectProject
+    rejectProject,
+    getDepartmentProjects
 } = require('../controllers/project.controller');
 
 // Configure multer for project file uploads
@@ -69,6 +70,11 @@ router.post('/upload', upload.fields([
 // @desc    Get all projects for current user (including team projects)
 // @access  Private
 router.get('/', getMyProjects);
+
+// @route   GET /api/projects/department/all
+// @desc    Get all department projects (HOD only)
+// @access  Private (HOD only)
+router.get('/department/all', getDepartmentProjects);
 
 // @route   GET /api/projects/:id
 // @desc    Get single project

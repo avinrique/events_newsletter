@@ -257,22 +257,20 @@ exports.getMyProjects = async (req, res) => {
                 member.user._id.toString() === req.user.id
             )?.role || 'member';
 
-            // Get approval status
-            const pendingApproval = project.approvals?.find(a => a.status === 'pending');
-            const rejectedApproval = project.approvals?.find(a => a.status === 'rejected');
-            const approvedApproval = project.approvals?.find(a => a.status === 'approved');
+            // Get approval status from the new field structure
+            // Keep legacy approval array logic for backward compatibility
 
             return {
                 _id: project._id,
                 title: project.title,
-                projectType: project.studentProjectType,
+                projectType: project.studentProjectType || 'project',
                 domain: project.domain,
-                description: project.abstract,
+                description: project.description,
                 technologies: project.technicalDetails?.technologies || [],
-                startDate: project.startDate,
-                expectedEndDate: project.expectedEndDate,
-                actualEndDate: project.actualEndDate,
-                status: project.status,
+                startDate: project.timeline?.startDate,
+                expectedEndDate: project.timeline?.expectedEndDate,
+                actualEndDate: project.timeline?.actualEndDate,
+                status: project.approvalStatus,
                 githubUrl: project.outcomes?.find(o => o.githubUrl)?.githubUrl,
                 liveUrl: project.outcomes?.find(o => o.demoUrl)?.demoUrl,
                 mentor: project.primaryMentor,
@@ -283,11 +281,7 @@ exports.getMyProjects = async (req, res) => {
                 createdAt: project.createdAt,
                 updatedAt: project.updatedAt,
                 // Approval information
-                approvalStatus: pendingApproval ? 'pending' : 
-                               rejectedApproval ? 'rejected' : 
-                               approvedApproval ? 'approved' : 'none',
-                approvalComments: rejectedApproval?.comments || pendingApproval?.comments || approvedApproval?.comments,
-                approverName: (pendingApproval?.approver || rejectedApproval?.approver || approvedApproval?.approver)?.name,
+                approvalStatus: project.approvalStatus || 'pending-approval',
                 // Project files and resources
                 outcomes: project.outcomes || [],
                 progress: project.progress || { percentage: 0 },
@@ -557,7 +551,7 @@ exports.approveProject = async (req, res) => {
         }
         
         // HODs can approve any project in their department
-        if (req.user.role === 'hod') {
+        if (req.user.role === 'teacher' && req.user.position === 'HOD') {
             hasPermission = true;
         }
         
@@ -568,7 +562,7 @@ exports.approveProject = async (req, res) => {
             });
         }
         
-        project.status = 'approved';
+        project.approvalStatus = 'approved';
         
         // Add approval to approvals array
         project.approvals = project.approvals || [];
@@ -659,7 +653,7 @@ exports.rejectProject = async (req, res) => {
         }
         
         // HODs can reject any project in their department
-        if (req.user.role === 'hod') {
+        if (req.user.role === 'teacher' && req.user.position === 'HOD') {
             hasPermission = true;
         }
         
@@ -670,7 +664,7 @@ exports.rejectProject = async (req, res) => {
             });
         }
         
-        project.status = 'rejected';
+        project.approvalStatus = 'rejected';
         
         // Add rejection to approvals array
         project.approvals = project.approvals || [];
@@ -697,6 +691,77 @@ exports.rejectProject = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error rejecting project',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get all department projects (HOD access)
+// @route   GET /api/projects/department/all
+// @access  Private (HOD only)
+exports.getDepartmentProjects = async (req, res) => {
+    try {
+        // Check if user is HOD
+        if (req.user.role !== 'teacher' || req.user.position !== 'HOD') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Only HODs can view department projects.'
+            });
+        }
+
+        const { studentProjectType, approvalStatus, page = 1, limit = 50 } = req.query;
+
+        let query = { 
+            department: req.user.department,
+            projectCategory: 'student-project'  // Only student projects for HODs
+        };
+
+        // Filter by project type if specified
+        if (studentProjectType && ['personal', 'mini', 'major'].includes(studentProjectType)) {
+            query.studentProjectType = studentProjectType;
+        }
+
+        // Filter by approval status if specified
+        if (approvalStatus) {
+            query.approvalStatus = approvalStatus;
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const projects = await Project.find(query)
+            .populate([
+                { path: 'createdBy', select: 'name email usn rollNumber' },
+                { path: 'primaryMentor', select: 'name email designation' },
+                { path: 'department', select: 'name code' },
+                { path: 'teamMembers.user', select: 'name email usn rollNumber' }
+            ])
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const totalProjects = await Project.countDocuments(query);
+
+        // Group projects by type for easy access
+        const projectsByType = {
+            personal: projects.filter(p => p.studentProjectType === 'personal'),
+            mini: projects.filter(p => p.studentProjectType === 'mini'),
+            major: projects.filter(p => p.studentProjectType === 'major')
+        };
+
+        res.status(200).json({
+            success: true,
+            count: projects.length,
+            totalProjects,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalProjects / parseInt(limit)),
+            data: projects,
+            projectsByType
+        });
+    } catch (error) {
+        console.error('Error fetching department projects:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching department projects',
             error: error.message
         });
     }

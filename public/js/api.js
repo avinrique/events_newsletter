@@ -177,6 +177,12 @@ class API {
         });
     }
 
+    // HOD-specific endpoints
+    async getDepartmentStudents(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/users/department/students${queryString ? '?' + queryString : ''}`);
+    }
+
     // Department endpoints
     async createDepartment(deptData) {
         return this.request('/departments', {
@@ -318,6 +324,59 @@ class API {
             body: formData,
             headers: {} // Remove content-type to let browser set it for multipart
         });
+    }
+
+    async getDepartmentProjects(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/projects/department/all${queryString ? '?' + queryString : ''}`);
+    }
+
+    async approveProject(projectId) {
+        return this.request(`/projects/${projectId}/approve`, {
+            method: 'PUT'
+        });
+    }
+
+    async rejectProject(projectId, reason) {
+        return this.request(`/projects/${projectId}/reject`, {
+            method: 'PUT',
+            body: { reason }
+        });
+    }
+
+    // Report endpoints
+    async getTeacherReport(teacherId, params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/reports/teachers/${teacherId}${queryString ? '?' + queryString : ''}`);
+    }
+
+    async getDepartmentTeachersReport(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/reports/department/teachers${queryString ? '?' + queryString : ''}`);
+    }
+
+    async downloadTeacherReport(teacherId, params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        const url = `/reports/teachers/${teacherId}/download${queryString ? '?' + queryString : ''}`;
+        
+        // For download, we'll return the URL for window.open or direct download
+        return {
+            success: true,
+            downloadUrl: `${API_BASE}${url}`,
+            directDownload: () => {
+                const link = document.createElement('a');
+                link.href = `${API_BASE}${url}`;
+                link.setAttribute('download', '');
+                if (this.token) {
+                    // For download with auth, we need to handle it differently
+                    window.open(`${API_BASE}${url}?token=${this.token}`, '_blank');
+                } else {
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        };
     }
 
     // Certificate endpoints

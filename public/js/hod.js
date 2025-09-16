@@ -254,6 +254,7 @@ function setupEventListeners() {
     document.getElementById('generateReportBtn').addEventListener('click', generateReport);
     document.getElementById('generateNewsletterBtn').addEventListener('click', generateNewsletter);
     document.getElementById('reportPeriod').addEventListener('change', handleReportPeriodChange);
+    document.getElementById('reportType').addEventListener('change', handleReportTypeChange);
     
     // Dynamic content event delegation
     document.addEventListener('click', handleDynamicActions);
@@ -263,6 +264,8 @@ function setupEventListeners() {
     document.getElementById('studentSearch').addEventListener('keyup', searchStudents);
     document.getElementById('teacherEventSearch').addEventListener('keyup', searchTeacherEvents);
     document.getElementById('semesterFilter').addEventListener('change', loadStudents);
+    document.getElementById('projectTypeFilter').addEventListener('change', loadProjects);
+    document.getElementById('projectStatusFilter').addEventListener('change', loadProjects);
     
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -299,6 +302,9 @@ function handleNavigation(e) {
             break;
         case 'students':
             loadStudents();
+            break;
+        case 'projects':
+            loadProjects();
             break;
         case 'budgets':
             loadBudgets();
@@ -511,16 +517,13 @@ function searchTeachers() {
 async function loadStudents() {
     try {
         const semesterFilter = document.getElementById('semesterFilter').value;
-        const params = { 
-            department: currentUser.department._id, 
-            role: 'student'
-        };
+        const params = {};
         
         if (semesterFilter) {
-            params.semester = parseInt(semesterFilter);
+            params.semester = semesterFilter;
         }
         
-        const response = await api.getUsers(params);
+        const response = await api.getDepartmentStudents(params);
         const studentsList = document.getElementById('studentsList');
         
         if (response.data && response.data.length > 0) {
@@ -747,9 +750,203 @@ async function loadBudgets() {
     document.getElementById('budgetsList').innerHTML = '<p>Budget management functionality - To be implemented</p>';
 }
 
+// Project Management
+async function loadProjects() {
+    try {
+        const typeFilter = document.getElementById('projectTypeFilter').value;
+        const statusFilter = document.getElementById('projectStatusFilter').value;
+        const params = {};
+        
+        if (typeFilter) {
+            params.studentProjectType = typeFilter;
+        }
+        if (statusFilter) {
+            params.approvalStatus = statusFilter;
+        }
+        
+        const response = await api.getDepartmentProjects(params);
+        const projectsList = document.getElementById('projectsList');
+        
+        if (response.data && response.data.length > 0) {
+            projectsList.innerHTML = response.data.map(project => `
+                <div class="project-card" data-project-id="${project._id}">
+                    <div class="project-header">
+                        <div class="project-info">
+                            <h3>${project.title}</h3>
+                            <div class="project-meta">
+                                <span class="project-type ${project.studentProjectType}">${project.studentProjectType.charAt(0).toUpperCase() + project.studentProjectType.slice(1)} Project</span>
+                                <span class="project-status ${project.approvalStatus}">${project.approvalStatus.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-sm btn-outline" onclick="viewProject('${project._id}')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="project-details">
+                        <p><strong>Domain:</strong> ${project.domain}</p>
+                        <p><strong>Created by:</strong> ${project.createdBy.name} (${project.createdBy.usn || project.createdBy.rollNumber || 'N/A'})</p>
+                        ${project.primaryMentor ? `<p><strong>Mentor:</strong> ${project.primaryMentor.name}</p>` : ''}
+                        ${project.teamMembers && project.teamMembers.length > 0 ? `
+                            <p><strong>Team Members:</strong> ${project.teamMembers.map(member => member.user.name).join(', ')}</p>
+                        ` : ''}
+                        ${project.description ? `<p><strong>Description:</strong> ${project.description.length > 100 ? project.description.substring(0, 100) + '...' : project.description}</p>` : ''}
+                        <p><strong>Created:</strong> ${new Date(project.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    
+                    ${project.approvalStatus === 'pending-approval' ? `
+                        <div class="project-approval-actions">
+                            <button class="btn btn-sm btn-success" onclick="approveProject('${project._id}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectProject('${project._id}')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            // Update project count display
+            const projectCounts = {
+                total: response.data.length,
+                personal: response.projectsByType.personal.length,
+                mini: response.projectsByType.mini.length,
+                major: response.projectsByType.major.length,
+                approved: response.data.filter(p => p.approvalStatus === 'approved').length,
+                pending: response.data.filter(p => p.approvalStatus === 'pending-approval').length
+            };
+            
+            // Display project statistics if element exists
+            const statsContainer = document.getElementById('projectStats');
+            if (statsContainer) {
+                statsContainer.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">${projectCounts.total}</span>
+                            <span class="stat-label">Total Projects</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${projectCounts.personal}</span>
+                            <span class="stat-label">Personal</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${projectCounts.mini}</span>
+                            <span class="stat-label">Mini Projects</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${projectCounts.major}</span>
+                            <span class="stat-label">Major Projects</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${projectCounts.approved}</span>
+                            <span class="stat-label">Approved</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${projectCounts.pending}</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            projectsList.innerHTML = '<p>No projects found in your department.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading projects:', error);
+        document.getElementById('projectsList').innerHTML = '<p>Error loading projects.</p>';
+    }
+}
+
+// Project Action Functions
+function viewProject(projectId) {
+    // TODO: Implement project view modal or redirect to project details
+    console.log('Viewing project:', projectId);
+    alert(`Project viewing feature to be implemented. Project ID: ${projectId}`);
+}
+
+async function approveProject(projectId) {
+    try {
+        if (!confirm('Are you sure you want to approve this project?')) {
+            return;
+        }
+
+        const response = await api.approveProject(projectId);
+
+        if (response.success) {
+            alert('Project approved successfully!');
+            loadProjects(); // Reload the projects list
+        } else {
+            alert('Failed to approve project: ' + (response.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error approving project:', error);
+        alert('Error approving project: ' + error.message);
+    }
+}
+
+async function rejectProject(projectId) {
+    try {
+        const reason = prompt('Please provide a reason for rejection:');
+        if (!reason) {
+            return; // User cancelled
+        }
+
+        const response = await api.rejectProject(projectId, reason);
+
+        if (response.success) {
+            alert('Project rejected successfully!');
+            loadProjects(); // Reload the projects list
+        } else {
+            alert('Failed to reject project: ' + (response.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error rejecting project:', error);
+        alert('Error rejecting project: ' + error.message);
+    }
+}
+
 // Report Management
 async function loadReports() {
-    document.getElementById('reportContent').innerHTML = '<p>Select a report period and click "Generate Report" to view department reports.</p>';
+    // Load teachers for the dropdown
+    await loadTeachersForReports();
+    document.getElementById('reportContent').innerHTML = '<p>Select a report type and period, then click "Generate Report" to view reports.</p>';
+}
+
+async function loadTeachersForReports() {
+    try {
+        const response = await api.getUsers({ 
+            department: currentUser.department._id, 
+            role: 'teacher' 
+        });
+        
+        const teacherSelect = document.getElementById('selectedTeacher');
+        teacherSelect.innerHTML = '<option value="">Select a teacher...</option>';
+        
+        if (response.data && response.data.length > 0) {
+            response.data.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher._id;
+                option.textContent = `${teacher.name} (${teacher.designation?.name || 'Teacher'})`;
+                teacherSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading teachers for reports:', error);
+    }
+}
+
+function handleReportTypeChange() {
+    const reportType = document.getElementById('reportType').value;
+    const teacherSelector = document.getElementById('teacherSelector');
+    
+    if (reportType === 'individual') {
+        teacherSelector.style.display = 'block';
+    } else {
+        teacherSelector.style.display = 'none';
+    }
 }
 
 function handleReportPeriodChange() {
@@ -764,11 +961,13 @@ function handleReportPeriodChange() {
 }
 
 async function generateReport() {
+    const reportType = document.getElementById('reportType').value;
     const period = document.getElementById('reportPeriod').value;
     let startDate, endDate;
     
     const now = new Date();
     
+    // Calculate date range
     switch (period) {
         case 'current-month':
             startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -788,32 +987,234 @@ async function generateReport() {
             endDate = new Date(document.getElementById('endDate').value);
             break;
     }
+
+    const params = {};
+    if (startDate && endDate) {
+        params.startDate = startDate.toISOString().split('T')[0];
+        params.endDate = endDate.toISOString().split('T')[0];
+    }
     
     try {
-        // TODO: Implement actual report generation API call
         const reportContent = document.getElementById('reportContent');
-        reportContent.innerHTML = `
-            <h3>Department Report (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})</h3>
-            <div style="margin-top: 2rem;">
-                <h4>Summary</h4>
-                <p>Report generation functionality will be implemented once the report API endpoints are ready.</p>
-                <p>This report will include:</p>
-                <ul>
-                    <li>Club activities and membership statistics</li>
-                    <li>Event attendance and success metrics</li>
-                    <li>Budget utilization summary</li>
-                    <li>Student project completions</li>
-                    <li>Faculty achievements and certificates</li>
-                    <li>Internship placements</li>
-                </ul>
-            </div>
-        `;
+        reportContent.innerHTML = '<div class="loading">Generating report...</div>';
+
+        if (reportType === 'individual') {
+            const teacherId = document.getElementById('selectedTeacher').value;
+            if (!teacherId) {
+                alert('Please select a teacher for individual report');
+                return;
+            }
+            await generateIndividualTeacherReport(teacherId, params);
+        } else if (reportType === 'teachers') {
+            await generateTeachersReport(params);
+        } else {
+            await generateDepartmentReport(params);
+        }
         
         showNotification('Report generated successfully!', 'success');
     } catch (error) {
         console.error('Error generating report:', error);
         showNotification('Error generating report: ' + error.message, 'error');
+        document.getElementById('reportContent').innerHTML = '<p>Error generating report. Please try again.</p>';
     }
+}
+
+async function generateIndividualTeacherReport(teacherId, params) {
+    const response = await api.getTeacherReport(teacherId, params);
+    const reportData = response.data;
+    
+    const reportContent = document.getElementById('reportContent');
+    reportContent.innerHTML = `
+        <div class="teacher-report">
+            <div class="report-header">
+                <h3>Teacher Activity Report</h3>
+                <div class="report-actions">
+                    <button onclick="downloadTeacherReport('${teacherId}', ${JSON.stringify(params).replace(/"/g, '&quot;')})" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Download Report
+                    </button>
+                </div>
+            </div>
+            
+            <div class="teacher-info">
+                <h4>${reportData.teacher.name}</h4>
+                <p><strong>Designation:</strong> ${reportData.teacher.designation || 'Teacher'}</p>
+                <p><strong>Email:</strong> ${reportData.teacher.email}</p>
+                <p><strong>Department:</strong> ${reportData.teacher.department}</p>
+                <p><strong>Report Period:</strong> ${reportData.reportPeriod.startDate} to ${reportData.reportPeriod.endDate}</p>
+            </div>
+
+            <div class="statistics-grid">
+                <div class="stat-card">
+                    <h5>Projects Mentored</h5>
+                    <div class="stat-number">${reportData.statistics.totalMentoredProjects}</div>
+                    <div class="stat-breakdown">
+                        Major: ${reportData.statistics.projectsByType.major} | 
+                        Mini: ${reportData.statistics.projectsByType.mini} | 
+                        Personal: ${reportData.statistics.projectsByType.personal}
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h5>Certificates Supervised</h5>
+                    <div class="stat-number">${reportData.statistics.totalSupervisedCertificates}</div>
+                    <div class="stat-breakdown">
+                        Approved: ${reportData.statistics.certificatesByStatus.approved} | 
+                        Pending: ${reportData.statistics.certificatesByStatus.pending}
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h5>Internships Supervised</h5>
+                    <div class="stat-number">${reportData.statistics.totalSupervisedInternships}</div>
+                    <div class="stat-breakdown">
+                        Approved: ${reportData.statistics.internshipsByStatus.approved} | 
+                        Pending: ${reportData.statistics.internshipsByStatus.pending}
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h5>Events Created</h5>
+                    <div class="stat-number">${reportData.statistics.totalCreatedEvents}</div>
+                    <div class="stat-breakdown">
+                        Published: ${reportData.statistics.eventsByStatus.published} | 
+                        Completed: ${reportData.statistics.eventsByStatus.completed}
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-sections">
+                <div class="report-section">
+                    <h5>Recent Projects Mentored</h5>
+                    <div class="data-table">
+                        ${reportData.mentoredProjects.length > 0 ? `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Project Title</th>
+                                        <th>Type</th>
+                                        <th>Student</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${reportData.mentoredProjects.map(project => `
+                                        <tr>
+                                            <td>${project.title}</td>
+                                            <td>${project.type}</td>
+                                            <td>${project.createdBy} (${project.studentUSN})</td>
+                                            <td><span class="status-badge ${project.status}">${project.status}</span></td>
+                                            <td>${new Date(project.createdAt).toLocaleDateString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p>No projects mentored in this period.</p>'}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function generateTeachersReport(params) {
+    const response = await api.getDepartmentTeachersReport(params);
+    const reportData = response.data;
+    
+    const reportContent = document.getElementById('reportContent');
+    reportContent.innerHTML = `
+        <div class="teachers-report">
+            <div class="report-header">
+                <h3>Department Teachers Report</h3>
+                <p><strong>Period:</strong> ${reportData.reportPeriod.startDate} to ${reportData.reportPeriod.endDate}</p>
+            </div>
+            
+            <div class="department-totals">
+                <h4>Department Summary</h4>
+                <div class="statistics-grid">
+                    <div class="stat-card">
+                        <h5>Total Teachers</h5>
+                        <div class="stat-number">${reportData.departmentTotals.totalTeachers}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Projects Mentored</h5>
+                        <div class="stat-number">${reportData.departmentTotals.totalMentoredProjects}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Certificates Supervised</h5>
+                        <div class="stat-number">${reportData.departmentTotals.totalSupervisedCertificates}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Events Created</h5>
+                        <div class="stat-number">${reportData.departmentTotals.totalCreatedEvents}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="teachers-list">
+                <h4>Individual Teacher Performance</h4>
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Teacher</th>
+                                <th>Designation</th>
+                                <th>Projects</th>
+                                <th>Certificates</th>
+                                <th>Internships</th>
+                                <th>Events</th>
+                                <th>Students</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${reportData.teacherReports.map(teacher => `
+                                <tr>
+                                    <td>${teacher.teacher.name}</td>
+                                    <td>${teacher.teacher.designation || 'Teacher'}</td>
+                                    <td>${teacher.activityCounts.mentoredProjects}</td>
+                                    <td>${teacher.activityCounts.supervisedCertificates}</td>
+                                    <td>${teacher.activityCounts.supervisedInternships}</td>
+                                    <td>${teacher.activityCounts.createdEvents}</td>
+                                    <td>${teacher.activityCounts.assignedStudents}</td>
+                                    <td>
+                                        <button onclick="generateIndividualTeacherReportById('${teacher.teacher._id}')" class="btn btn-sm btn-outline">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function generateDepartmentReport(params) {
+    // For now, generate a combined department summary
+    await generateTeachersReport(params);
+}
+
+async function downloadTeacherReport(teacherId, params) {
+    try {
+        const response = await api.downloadTeacherReport(teacherId, params);
+        if (response.success) {
+            response.directDownload();
+            showNotification('Report download started!', 'success');
+        }
+    } catch (error) {
+        console.error('Error downloading report:', error);
+        showNotification('Error downloading report: ' + error.message, 'error');
+    }
+}
+
+async function generateIndividualTeacherReportById(teacherId) {
+    document.getElementById('reportType').value = 'individual';
+    document.getElementById('selectedTeacher').value = teacherId;
+    handleReportTypeChange();
+    await generateReport();
 }
 
 async function generateNewsletter() {

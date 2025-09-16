@@ -490,3 +490,70 @@ exports.getAllStudentsForTeacher = async (req, res) => {
         });
     }
 };
+
+// @desc    Get all department students (HOD access)
+// @route   GET /api/users/department/students
+// @access  Private (HOD only)
+exports.getDepartmentStudents = async (req, res) => {
+    try {
+        // Check if user is HOD
+        if (req.user.role !== 'teacher' || req.user.position !== 'HOD') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Only HODs can view department students.'
+            });
+        }
+
+        const { semester, page = 1, limit = 50 } = req.query;
+
+        let query = { 
+            department: req.user.department,
+            role: 'student'
+        };
+
+        // Filter by semester if specified
+        if (semester) {
+            query.semester = parseInt(semester);
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const students = await User.find(query)
+            .populate('department', 'name code')
+            .populate('proctor', 'name email')
+            .populate('classTeacher', 'name email')
+            .select('-password')
+            .sort({ name: 1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const totalStudents = await User.countDocuments(query);
+
+        // Group students by semester for easy access
+        const studentsBySemester = {};
+        students.forEach(student => {
+            const sem = student.semester || 'unassigned';
+            if (!studentsBySemester[sem]) {
+                studentsBySemester[sem] = [];
+            }
+            studentsBySemester[sem].push(student);
+        });
+
+        res.status(200).json({
+            success: true,
+            count: students.length,
+            totalStudents,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalStudents / parseInt(limit)),
+            data: students,
+            studentsBySemester
+        });
+    } catch (error) {
+        console.error('Error fetching department students:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching department students',
+            error: error.message
+        });
+    }
+};

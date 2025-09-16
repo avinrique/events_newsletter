@@ -26,6 +26,9 @@ router.get('/teachers/department', authorize('student'), userController.getDepar
 // Get all students for teachers (includes relationships)
 router.get('/students/all', authorize('teacher'), userController.getAllStudentsForTeacher);
 
+// Get all department students (HOD only)
+router.get('/department/students', authorize('hod'), userController.getDepartmentStudents);
+
 // Get single user
 router.get('/:id', authorize('superadmin', 'admin', 'hod', 'teacher'), userController.getUser);
 

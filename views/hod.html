@@ -527,8 +527,7 @@
                         <option value="approved">Approved</option>
                         <option value="pending-approval">Pending Approval</option>
                         <option value="rejected">Rejected</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Completed</option>
+                        <option value="revision-required">Revision Required</option>
                     </select>
                 </div>
 
@@ -609,6 +608,20 @@
                 </div>
                 
                 <div class="report-filters">
+                    <div class="filter-group">
+                        <label>Report Type:</label>
+                        <select id="reportType">
+                            <option value="department">Department Summary</option>
+                            <option value="teachers">Teachers Report</option>
+                            <option value="individual">Individual Teacher</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="teacherSelector" style="display: none;">
+                        <label>Select Teacher:</label>
+                        <select id="selectedTeacher">
+                            <option value="">Loading teachers...</option>
+                        </select>
+                    </div>
                     <div class="filter-group">
                         <label>Report Period:</label>
                         <select id="reportPeriod">
