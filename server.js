@@ -120,7 +120,7 @@ app.use((req, res) => {
         message: 'Route not found'
     });
 });
-const PORT = 3000;
+const PORT = 3007;
 
 // Only start server if not in test environment
 if (process.env.NODE_ENV !== 'test') {

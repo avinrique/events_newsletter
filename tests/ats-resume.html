@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhinav Gupta - Resume</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.1;
+            color: #000;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.4in 0.5in;
+            background: white;
+            font-size: 9px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 1px;
+        }
+
+        .title {
+            font-size: 9px;
+            color: #000;
+            margin-bottom: 3px;
+            font-weight: normal;
+        }
+
+        .contact {
+            font-size: 9px;
+            color: #000;
+            line-height: 1.2;
+        }
+
+        .contact a {
+            color: #2c5aa0;
+            text-decoration: none;
+        }
+
+        .section {
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 4px;
+        }
+
+        .education-item {
+            margin-bottom: 4px;
+        }
+
+        .institution {
+            font-weight: normal;
+            font-size: 9px;
+        }
+
+        .skills-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .skill-category {
+            margin-bottom: 2px;
+            font-size: 9px;
+        }
+
+        .skill-label {
+            font-weight: bold;
+        }
+
+        .project-item {
+            margin-bottom: 5px;
+        }
+
+        .project-title {
+            font-weight: bold;
+            color: #000;
+            font-size: 9px;
+            display: inline;
+        }
+
+        .project-url {
+            color: #000;
+            font-size: 9px;
+            font-weight: normal;
+        }
+
+        .project-description {
+            margin-top: 1px;
+            text-align: justify;
+            font-size: 9px;
+            line-height: 1.2;
+        }
+
+        .client-item {
+            margin-bottom: 5px;
+        }
+
+        .client-title {
+            font-weight: bold;
+            color: #000;
+            font-size: 9px;
+            display: inline;
+        }
+
+        .client-url {
+            color: #000;
+            font-size: 9px;
+            font-weight: normal;
+        }
+
+        .awards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .award-item {
+            font-size: 9px;
+            margin-bottom: 1px;
+        }
+
+        @media print {
+            body {
+                padding: 0.3in;
+                font-size: 8px;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+                margin-bottom: 6px;
+            }
+            
+            .project-item, .client-item {
+                page-break-inside: avoid;
+                margin-bottom: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="name">Abhinav Gupta</div>
+        <div class="title">Software & Automation Engineer with GenAI & Cybersecurity</div>
+        <div class="contact">
+            Bangalore, Karnataka • +91 84341 06606 • avigupta2001ad@gmail.com<br>
+            <a href="https://github.com/avinrique">GitHub</a> <a href="https://linkedin.com/in/avigupta2001ad">LinkedIn</a> <a href="https://npmjs.com/~avinrique">NPM</a> <a href="https://pypi.org/user/avinrique">PyPI</a> <a href="https://avinrique.github.io/portfolio/">Portfolio</a>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Summary</div>
+        <p>Engineer with strong Linux foundations and cross-disciplinary expertise in software, hardware, and GenAI. Created AI-proctored platforms, real-time monitors, fixed microcontroller libraries, and a LAN screen extender for Linux. Published tools, delivered client systems, and won national hackathons.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Education</div>
+        <div class="education-item">
+            <div class="institution">BMS Institute of Technology, Bangalore — B.E. in Information Science</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Skills</div>
+        <div class="skills-container">
+            <div>
+                <div class="skill-category">
+                    <span class="skill-label">Languages:</span> Python, JavaScript, Bash, Java (basic)
+                </div>
+                <div class="skill-category">
+                    <span class="skill-label">Tools:</span> Electron, MongoDB, Firebase, Judge0, Docker, Git
+                </div>
+                <div class="skill-category">
+                    <span class="skill-label">Embedded:</span> ESP32, Raspberry Pi, Arduino, ATtiny85, NRF24L01
+                </div>
+            </div>
+            <div>
+                <div class="skill-category">
+                    <span class="skill-label">Linux:</span> Shell scripting, chroot, debootstrap, OS automation
+                </div>
+                <div class="skill-category">
+                    <span class="skill-label">GenAI:</span> Prompting, OpenAI, Gemini, Web Agents, STT/TTS
+                </div>
+                <div class="skill-category">
+                    <span class="skill-label">Security:</span> Nmap, Metasploit, Burp Suite, Nessus, Bettercap
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Major Projects</div>
+        
+        <div class="project-item">
+            <div class="project-title">Noa - The Companion Bot</div>
+            <div class="project-description">
+                – ESP32-based robotic assistant with servo motors and advanced LLM-driven TTS/STT (Google STT/Piper, Python SR), capable of lifelike conversations and emotions. Extensively used web agents and GenAI for autonomous interactions and decision-making.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">Prepzer0 <span class="project-url">(https://bmsit.prepzer0.co.in)</span></div>
+            <div class="project-description">
+                – Developed a cutting-edge AI-driven placement testing platform with integrated AI proctoring to detect multiple faces, phone usage, and suspicious behavior. Offers HackerEarth-like experience with Judge0 backend for real-time code execution. Scalable and easy for institutions.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">AutoCISGuard</div>
+            <div class="project-description">
+                – GUI CIS benchmark auditor for Windows and Linux with automated reporting and customizable policies using PowerShell, Bash, Python, and Electron.js. Utilizes AI agents and RAG (Retrieval-Augmented Generation) for intelligent CIS benchmark automation and policy recommendations. Demonstrates deep cybersecurity auditing expertise.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">Aigle Air</div>
+            <div class="project-description">
+                – IoT air monitor measuring CO₂/O₂/PM with OLED display, providing real-time environmental feedback.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">Elcia – Wearable Navigation Device for the Visually Impaired</div>
+            <div class="project-description">
+                – Raspberry Pi + LiDAR/ToF camera wearable that maps environment, detects obstacles, and provides voice-assisted navigation.
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Work Experience</div>
+        
+        <div class="client-item">
+            <div class="client-title">Chillaxmandu.com <span class="client-url">(https://chillaxmandu.com)</span></div>
+            <div class="project-description">
+                – Full-stack e-commerce platform for liquor delivery with secure authentication, product catalog, shopping cart, and admin dashboard.
+            </div>
+        </div>
+
+        <div class="client-item">
+            <div class="client-title">Hald20.ch <span class="client-url">(https://halde20.ch)</span></div>
+            <div class="project-description">
+                – Clean, responsive website for a Swiss restaurant optimized for SEO and performance.
+            </div>
+        </div>
+
+        <div class="client-item">
+            <div class="client-title">LinuxScreen</div>
+            <div class="project-description">
+                – Developed Linux-compatible display extension app over LAN (Spacedesk-style) enabling multi-screen use without extra hardware.
+            </div>
+        </div>
+
+        <div class="client-item">
+            <div class="client-title">LinkedIn Automation Tool</div>
+            <div class="project-description">
+                – Automated bulk messaging and connection requests on LinkedIn with custom scripts to boost outreach and networking.
+            </div>
+        </div>
+
+        <div class="client-item">
+            <div class="client-title">Satellite CubeSat Project</div>
+            <div class="project-description">
+                – Miniaturized CubeSat with Arduino and NRF communication modules for satellite health monitoring and real-time ground data visualization.
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Open Source & Published Work</div>
+        
+        <div class="project-item">
+            <div class="project-title">Open Source Utility Libraries</div>
+            <div class="project-description">
+                – Published various NPM and PyPI packages including copy-paste utilities and workflow enhancers, contributing to developer community.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">Application Word Count</div>
+            <div class="project-description">
+                – Lightweight desktop app for word counting with over 100+ downloads, focused on simplicity and speed.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">AnimeWorld App</div>
+            <div class="project-description">
+                – Popular mobile/web app with 10,000+ downloads aggregating anime content with catalog, watchlists, and episode tracking using web scraping and cloud backend.
+            </div>
+        </div>
+
+        <div class="project-item">
+            <div class="project-title">ATtiny85 Revival</div>
+            <div class="project-description">
+                – Fixed broken servo library for ATtiny85 microcontrollers.
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Awards</div>
+        <div class="awards-container">
+            <div>
+                <div class="award-item">1st – Pitch2Win (AI Bot)</div>
+                <div class="award-item">3rd – HackDay Pondy (Aigle Air)</div>
+                <div class="award-item">3rd – Pitch2Win (Expiry Biz Idea)</div>
+            </div>
+            <div>
+                <div class="award-item">1st – HackSphere (Automation)</div>
+                <div class="award-item">1st – Yukti (Tech Exhibition)</div>
+                <div class="award-item">Consolation – Anveshna National</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

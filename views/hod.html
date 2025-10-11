@@ -373,6 +373,7 @@
                 <li><a href="#projects" class="nav-link"><i class="fas fa-project-diagram"></i> Projects</a></li>
                 <li><a href="#teachers" class="nav-link"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
                 <li><a href="#students" class="nav-link"><i class="fas fa-user-graduate"></i> Students</a></li>
+                <li><a href="#letters" class="nav-link"><i class="fas fa-envelope"></i> Letter Writing</a></li>
                 <li><a href="#budgets" class="nav-link"><i class="fas fa-money-bill-wave"></i> Budget Approvals</a></li>
                 <li><a href="#reports" class="nav-link"><i class="fas fa-chart-bar"></i> Department Reports</a></li>
             </ul>
@@ -676,6 +677,114 @@
                 </div>
                 <div id="studentsList" class="data-grid">
                     <!-- Students will load here -->
+                </div>
+            </section>
+
+            <!-- Letters Section -->
+            <section id="lettersSection" class="section">
+                <div class="section-header">
+                    <h2>Letter Writing</h2>
+                    <div class="letter-actions">
+                        <button id="newLetterBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> New Letter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Letter Type Selection -->
+                <div id="letterTypeSelection" class="letter-type-selection" style="display: none;">
+                    <h3>Select Letter Type</h3>
+                    <div class="letter-type-grid">
+                        <div class="letter-type-card" data-type="event">
+                            <div class="letter-type-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h4>Event Application</h4>
+                            <p>Request approval for organizing events</p>
+                        </div>
+                        <div class="letter-type-card" data-type="reimbursement">
+                            <div class="letter-type-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <h4>Reimbursement Request</h4>
+                            <p>Request reimbursement for expenses</p>
+                        </div>
+                        <div class="letter-type-card" data-type="money-approval">
+                            <div class="letter-type-icon">
+                                <i class="fas fa-money-check-alt"></i>
+                            </div>
+                            <h4>Money Approval</h4>
+                            <p>Request approval for budget allocation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Letter Creation Form -->
+                <div id="letterCreationForm" class="letter-creation-container" style="display: none;">
+                    <div class="letter-form-section">
+                        <div class="form-sidebar">
+                            <h3 id="letterFormTitle">Create Letter</h3>
+                            
+                            <!-- Common Fields -->
+                            <div class="form-group">
+                                <label for="letterDate">Date</label>
+                                <input type="date" id="letterDate" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="letterTo">To</label>
+                                <input type="text" id="letterTo" placeholder="Recipient name and designation" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="letterFrom">From</label>
+                                <input type="text" id="letterFrom" placeholder="Your name and designation" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="letterSubject">Subject</label>
+                                <input type="text" id="letterSubject" placeholder="Letter subject" required>
+                            </div>
+
+                            <!-- Dynamic Fields based on letter type -->
+                            <div id="dynamicFields"></div>
+
+                            <div class="form-group">
+                                <label for="letterBody">Letter Body</label>
+                                <textarea id="letterBody" rows="8" placeholder="Enter the main content of your letter" required></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" id="previewLetterBtn" class="btn btn-secondary">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                                <button type="button" id="generateLetterBtn" class="btn btn-primary">
+                                    <i class="fas fa-file-download"></i> Generate Letter
+                                </button>
+                                <button type="button" id="cancelLetterBtn" class="btn btn-outline">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="letter-preview-section">
+                            <h3>Letter Preview</h3>
+                            <div id="letterPreview" class="letter-preview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-file-alt"></i>
+                                    <p>Fill in the form to see letter preview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Letters List -->
+                <div id="lettersList" class="letters-list">
+                    <h3>Recent Letters</h3>
+                    <div id="lettersContainer">
+                        <p class="no-letters">No letters created yet. Click "New Letter" to get started.</p>
+                    </div>
                 </div>
             </section>
         </main>

@@ -167,6 +167,16 @@ exports.login = async (req, res) => {
 
         const token = user.getSignedJwtToken();
 
+        // Debug logging for HOD authentication issues
+        console.log('🔍 /api/auth/login - User data:', {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            position: user.position,
+            userAgent: req.headers['user-agent']?.substring(0, 50)
+        });
+
         res.status(200).json({
             success: true,
             token,
@@ -279,7 +289,7 @@ exports.getMe = async (req, res) => {
             'designation',
             { path: 'proctor', select: 'name email designation' },
             { path: 'classTeacher', select: 'name email designation' }
-        ]);
+        ]).select('+position');
         
         // Debug logging for HOD authentication issues
         console.log('🔍 /api/auth/me - User data:', {

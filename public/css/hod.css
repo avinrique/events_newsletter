@@ -2152,3 +2152,299 @@ body {
         text-align: center !important;
     }
 }
+
+/* Letter Writing System Styles */
+.letter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.letter-type-selection {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.letter-type-selection h3 {
+    margin-bottom: 20px;
+    color: #2d3748;
+    font-size: 1.3rem;
+}
+
+.letter-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.letter-type-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.letter-type-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.letter-type-card.selected {
+    border-color: #667eea;
+    background: #f7faff;
+}
+
+.letter-type-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.letter-type-card h4 {
+    margin-bottom: 8px;
+    color: #2d3748;
+    font-size: 1.2rem;
+}
+
+.letter-type-card p {
+    color: #718096;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.letter-creation-container {
+    margin: 20px 0;
+}
+
+.letter-form-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.form-sidebar h3 {
+    margin-bottom: 24px;
+    color: #2d3748;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.letter-preview-section h3 {
+    margin-bottom: 20px;
+    color: #2d3748;
+    font-size: 1.3rem;
+}
+
+.letter-preview {
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+    padding: 30px;
+    min-height: 500px;
+    font-family: 'Times New Roman', serif;
+    line-height: 1.8;
+    color: #2d3748;
+}
+
+.preview-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #a0aec0;
+    text-align: center;
+}
+
+.preview-placeholder i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.letter-content {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.letter-header {
+    text-align: right;
+    margin-bottom: 30px;
+}
+
+.letter-date {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.letter-address {
+    margin-bottom: 30px;
+}
+
+.letter-to, .letter-from {
+    margin-bottom: 20px;
+}
+
+.letter-to strong, .letter-from strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #2d3748;
+}
+
+.letter-subject {
+    margin: 30px 0;
+    padding: 15px;
+    background: #f7fafc;
+    border-left: 4px solid #667eea;
+    font-weight: 600;
+}
+
+.letter-body {
+    margin: 30px 0;
+    text-align: justify;
+    line-height: 2;
+}
+
+.letter-signature {
+    margin-top: 50px;
+    text-align: right;
+}
+
+.letter-signature strong {
+    display: block;
+    margin-top: 20px;
+}
+
+.dynamic-field {
+    background: #f0f8ff;
+    border-left: 3px solid #667eea;
+    padding: 12px;
+    margin: 16px 0;
+}
+
+.dynamic-field label {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.letters-list {
+    margin: 30px 0;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.letters-list h3 {
+    margin-bottom: 20px;
+    color: #2d3748;
+    font-size: 1.3rem;
+}
+
+.no-letters {
+    text-align: center;
+    color: #a0aec0;
+    font-style: italic;
+    padding: 40px;
+}
+
+.letter-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.letter-item:hover {
+    border-color: #667eea;
+    background: #f7faff;
+}
+
+.letter-item-info h4 {
+    margin-bottom: 4px;
+    color: #2d3748;
+}
+
+.letter-item-info p {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.letter-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive Design for Letter Writing */
+@media (max-width: 968px) {
+    .letter-form-section {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .letter-type-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-wrap: wrap;
+    }
+    
+    .letter-preview {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 640px) {
+    .letter-type-card {
+        padding: 16px;
+    }
+    
+    .letter-type-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .letter-form-section {
+        padding: 20px;
+    }
+    
+    .letter-content {
+        padding: 20px;
+    }
+}

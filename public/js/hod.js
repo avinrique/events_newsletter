@@ -9,14 +9,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Additional safety check after a short delay
     setTimeout(() => {
         hideAllModalsOnLoad();
-    }, 100);
+    }, 10000);
     // Check if user is authenticated and has HOD role
     if (!api.token) {
+        console.log('HOD Auth: No token found, redirecting to login.');
         window.location.href = '/';
         return;
     }
 
     try {
+        console.log('HOD Auth: Token found, calling getMe().');
         const response = await api.getMe();
         currentUser = response.data;
         
@@ -36,14 +38,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!isHOD) {
             console.error('❌ HOD Auth Failed - User does not have HOD privileges');
             alert(`Access denied. HOD privileges required.\n\nUser details:\nRole: ${currentUser.role}\nPosition: ${currentUser.position}`);
-            
-            // Add delay to see console logs
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 3000);
+            window.location.href = '/';
             return;
         }
         
+        console.log('HOD Auth: User is HOD, initializing dashboard.');
         initializeHODDashboard();
     } catch (error) {
         console.error('Authentication error:', error);
@@ -60,6 +59,9 @@ function initializeHODDashboard() {
     
     // Initialize teacher functionality for HOD
     initializeTeacherFunctionality();
+    
+    // Initialize letter writing system
+    initializeLetterWriting();
     
     // Load dashboard data
     loadDashboardStats();
@@ -214,7 +216,7 @@ function enhanceModalResponsiveness() {
                         console.log('✅ Enhanced modal responsiveness for HOD panel');
                     }
                 });
-            }, 100);
+            }, 10000);
             
             return result;
         };
@@ -302,6 +304,10 @@ function handleNavigation(e) {
             break;
         case 'students':
             loadStudents();
+            break;
+        case 'letters':
+            // Letter writing system is already initialized
+            console.log('📝 Letters section activated');
             break;
         case 'projects':
             loadProjects();
@@ -1584,7 +1590,7 @@ function printNewsletter() {
         document.body.innerHTML = originalContents;
         // Re-initialize event listeners
         initializeEventListeners();
-    }, 1000);
+    }, 10000);
 }
 
 function exportNewsletter() {
@@ -1835,6 +1841,14 @@ function displayTeacherEvents(events) {
                 <button class="btn btn-edit" onclick="editTeacherEvent('${event._id}')">
                     <i class="fas fa-edit"></i> Edit
                 </button>
+                <div class="btn-group">
+                    <button class="btn btn-download" onclick="downloadTeacherEvent('${event._id}', 'pdf')">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn btn-download" onclick="downloadTeacherEvent('${event._id}', 'word')">
+                        <i class="fas fa-file-word"></i> Word
+                    </button>
+                </div>
                 <button class="btn btn-delete" onclick="deleteTeacherEvent('${event._id}')">
                     <i class="fas fa-trash"></i> Delete
                 </button>
@@ -2012,6 +2026,14 @@ function showEventDetailsModal(event) {
                 <button class="btn btn-primary" onclick="editTeacherEvent('${event._id}')">
                     <i class="fas fa-edit"></i> Edit Event
                 </button>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="downloadTeacherEvent('${event._id}', 'pdf')">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn btn-success" onclick="downloadTeacherEvent('${event._id}', 'word')">
+                        <i class="fas fa-file-word"></i> Word
+                    </button>
+                </div>
                 <button class="btn btn-secondary" data-close-modal>Close</button>
             </div>
         </div>
@@ -2078,6 +2100,564 @@ async function editTeacherEvent(eventId) {
         console.error('Error details:', error.stack);
         showNotification('Error opening event for editing', 'error');
     }
+}
+
+async function downloadTeacherEvent(eventId, format = 'pdf') {
+    try {
+        console.log(`📥 Downloading teacher event as ${format.toUpperCase()}:`, eventId);
+        
+        const response = await api.request(`/teacher-events/${eventId}`);
+        
+        if (response.success) {
+            const event = response.data;
+            
+            if (format === 'word') {
+                await generateWordDocument(event);
+                return;
+            }
+            
+            // Create PDF content with the same format as preview
+            const pdfContent = `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 24px; background: white; line-height: 1.6;">
+                    <h1 style="text-align: center; margin-bottom: 20px; color: #2d3748; font-size: 24px;">${event.title}</h1>
+                    
+                    <div style="margin-bottom: 20px; padding: 12px; background: #f7fafc; border-left: 4px solid #3182ce; border-radius: 4px;">
+                        <strong>📅 Event Date:</strong> ${new Date(event.eventDate).toLocaleDateString()}
+                    </div>
+                    
+                    ${event.description ? `<div style="margin-bottom: 16px;"><strong>Description:</strong><br/>${event.description}</div>` : ''}
+                    
+                    ${event.location ? `<div style="margin-bottom: 12px;"><strong>📍 Location:</strong> ${event.location}</div>` : ''}
+                    
+                    ${event.eventType ? `<div style="margin-bottom: 12px;"><strong>🎯 Event Type:</strong> ${event.eventType}</div>` : ''}
+                    
+                    ${event.eventCategory ? `<div style="margin-bottom: 12px;"><strong>📂 Category:</strong> ${event.eventCategory}</div>` : ''}
+                    
+                    ${event.targetAudience ? `<div style="margin-bottom: 12px;"><strong>👥 Target Audience:</strong> ${event.targetAudience}</div>` : ''}
+                    
+                    ${event.expectedAttendees ? `<div style="margin-bottom: 12px;"><strong>📊 Expected Attendees:</strong> ${event.expectedAttendees}</div>` : ''}
+                    
+                    ${event.createdBy?.name ? `<div style="margin-bottom: 12px;"><strong>👤 Created by:</strong> ${event.createdBy.name}</div>` : ''}
+                    
+                    ${event.teachersInvolved?.length ? `<div style="margin-bottom: 12px;"><strong>👨‍🏫 Teachers Involved:</strong> ${event.teachersInvolved.map(t => t.name).join(', ')}</div>` : ''}
+                    
+                    ${event.studentsInvolved?.length ? `<div style="margin-bottom: 12px;"><strong>👨‍🎓 Students Involved:</strong> ${event.studentsInvolved.map(s => `${s.name} (${s.usn || s.rollNumber})`).join(', ')}</div>` : ''}
+                    
+                    ${event.resourcesRequired ? `<div style="margin-bottom: 16px;"><strong>🛠️ Resources Required:</strong><br/>${event.resourcesRequired}</div>` : ''}
+                    
+                    ${event.outcome ? `<div style="margin-bottom: 16px;"><strong>🎯 Outcome:</strong><br/>${event.outcome}</div>` : ''}
+                    
+                    ${event.budget ? `
+                        <div style="margin-bottom: 16px;">
+                            <strong>💰 Budget Information:</strong>
+                            <div style="margin-left: 20px; margin-top: 8px;">
+                                ${event.budget.requested ? `<div>Requested: ₹${event.budget.requested}</div>` : ''}
+                                ${event.budget.approved ? `<div>Approved: ₹${event.budget.approved}</div>` : ''}
+                                ${event.budget.utilized ? `<div>Utilized: ₹${event.budget.utilized}</div>` : ''}
+                                ${event.budget.description ? `<div>Description: ${event.budget.description}</div>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${event.images?.length ? `
+                        <div style="margin-bottom: 16px;">
+                            <strong>📸 Event Images (${event.images.length}):</strong>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px;">
+                                ${event.images.map(image => `
+                                    <div style="text-align: center;">
+                                        <img src="${image.fileUrl}" alt="${image.fileName || 'Event Image'}" 
+                                             style="max-width: 100%; height: auto; max-height: 200px; border: 1px solid #ddd; border-radius: 4px; object-fit: cover;">
+                                        <div style="font-size: 10px; color: #666; margin-top: 4px;">${image.fileName || 'Event Image'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #666;">
+                        <div><strong>Status:</strong> ${event.status || 'Active'}</div>
+                        <div><strong>Approval Status:</strong> ${event.approvalStatus || 'Pending'}</div>
+                        <div><strong>Created:</strong> ${new Date(event.createdAt).toLocaleDateString()}</div>
+                        <div><strong>Last Updated:</strong> ${new Date(event.updatedAt).toLocaleDateString()}</div>
+                        <div style="margin-top: 10px;"><strong>Downloaded by:</strong> HOD Dashboard on ${new Date().toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Use browser's built-in print functionality to generate PDF
+            generatePDF(pdfContent, event.title);
+            
+            function generatePDF(content, title) {
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Teacher Event - ${title}</title>
+                        <style>
+                            @media print {
+                                body { margin: 0; }
+                                .no-print { display: none; }
+                            }
+                            body {
+                                font-family: Arial, sans-serif;
+                                line-height: 1.6;
+                                color: #333;
+                                margin: 0;
+                                padding: 20px;
+                            }
+                            h1 {
+                                text-align: center;
+                                margin-bottom: 20px;
+                                color: #2d3748;
+                                font-size: 24px;
+                            }
+                            .date-banner {
+                                margin-bottom: 20px;
+                                padding: 12px;
+                                background: #f7fafc;
+                                border-left: 4px solid #3182ce;
+                                border-radius: 4px;
+                            }
+                            .section {
+                                margin-bottom: 16px;
+                            }
+                            .section strong {
+                                color: #2d3748;
+                            }
+                            .budget-details {
+                                margin-left: 20px;
+                                margin-top: 8px;
+                            }
+                            .footer-info {
+                                margin-top: 30px;
+                                padding-top: 20px;
+                                border-top: 1px solid #e2e8f0;
+                                font-size: 12px;
+                                color: #666;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${content}
+                        <div class="no-print" style="position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                            <button onclick="window.print(); setTimeout(() => window.close(), 1000);" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Print as PDF</button>
+                            <button onclick="window.close();" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px;">Cancel</button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                
+                // Auto-trigger print dialog after a short delay
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                }, 500);
+                
+                console.log('✅ Teacher event PDF print dialog opened');
+                showNotification('Print dialog opened - Save as PDF to download', 'success');
+                
+                // Close any open modals
+                document.querySelectorAll('.modal').forEach(modal => modal.remove());
+            }
+            
+        } else {
+            console.error('❌ Failed to download teacher event:', response.message);
+            showNotification(response.message || 'Failed to download teacher event', 'error');
+        }
+    } catch (error) {
+        console.error('Error downloading teacher event:', error);
+        showNotification('Failed to download teacher event', 'error');
+    }
+}
+
+async function generateWordDocument(event) {
+    try {
+        // Check if docx library is available, if not load it
+        if (typeof window.docx === 'undefined') {
+            // Load docx library dynamically
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/docx@8.2.2/build/index.js';
+            script.onload = () => {
+                generateWordWithDocx(event);
+            };
+            script.onerror = () => {
+                // Fallback to HTML-based Word document
+                generateHTMLWordDocument(event);
+            };
+            document.head.appendChild(script);
+        } else {
+            generateWordWithDocx(event);
+        }
+        
+    } catch (error) {
+        console.error('Error generating Word document:', error);
+        showNotification('Failed to generate Word document', 'error');
+    }
+}
+
+async function generateImageParagraphs(images) {
+    const { Paragraph, TextRun, ImageRun, AlignmentType } = docx;
+    const imageParagraphs = [];
+    
+    // Header for images section
+    imageParagraphs.push(
+        new Paragraph({
+            children: [new TextRun({ text: `📸 Event Images (${images.length}):`, bold: true })],
+            spacing: { before: 200, after: 100 }
+        })
+    );
+    
+    // For now, just add image filenames instead of actual images
+    // This ensures the document generation works while we debug image embedding
+    for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        
+        imageParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({ 
+                        text: `${i + 1}. ${image.fileName || `Event Image ${i + 1}`}`,
+                        bold: true,
+                        size: 24
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 100, after: 50 }
+            })
+        );
+        
+        imageParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({ 
+                        text: `Image URL: ${image.fileUrl}`,
+                        italics: true,
+                        size: 20,
+                        color: "0066CC"
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 100 }
+            })
+        );
+        
+        imageParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({ 
+                        text: `Note: Image embedding is being fixed. You can view the image at the URL above.`,
+                        italics: true,
+                        size: 18,
+                        color: "666666"
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 150 }
+            })
+        );
+    }
+    
+    return imageParagraphs;
+}
+
+async function generateWordWithDocx(event) {
+    try {
+        console.log('🔄 Starting DOCX generation with docx library');
+        const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
+        
+        // Generate image paragraphs first
+        let imageParagraphs = [];
+        if (event.images?.length) {
+            console.log(`📸 Processing ${event.images.length} images for DOCX`);
+            try {
+                imageParagraphs = await generateImageParagraphs(event.images);
+                console.log(`✅ Successfully processed ${imageParagraphs.length} image paragraphs`);
+            } catch (imageError) {
+                console.error('❌ Error processing images:', imageError);
+                // Add a note that images couldn't be processed
+                imageParagraphs = [
+                    new Paragraph({
+                        children: [new TextRun({ 
+                            text: `📸 Event Images (${event.images.length} images - processing failed)`,
+                            bold: true,
+                            color: "FF6B6B"
+                        })],
+                        spacing: { before: 200, after: 100 }
+                    })
+                ];
+            }
+        }
+        
+        // Create document with all content including images
+        const doc = new Document({
+            sections: [{
+                properties: {},
+                children: [
+                    // Title
+                    new Paragraph({
+                        text: event.title,
+                        heading: HeadingLevel.TITLE,
+                        alignment: AlignmentType.CENTER,
+                    }),
+                    
+                    // Date
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: `📅 Event Date: ${new Date(event.eventDate).toLocaleDateString()}`,
+                                bold: true,
+                                highlight: "yellow"
+                            })
+                        ],
+                        spacing: { after: 200 }
+                    }),
+                    
+                    // Description
+                    ...(event.description ? [
+                        new Paragraph({
+                            children: [new TextRun({ text: "Description:", bold: true })],
+                            spacing: { before: 200 }
+                        }),
+                        new Paragraph({
+                            text: event.description,
+                            spacing: { after: 200 }
+                        })
+                    ] : []),
+                    
+                    // Location
+                    ...(event.location ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "📍 Location: ", bold: true }),
+                                new TextRun({ text: event.location })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Event Type
+                    ...(event.eventType ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "🎯 Event Type: ", bold: true }),
+                                new TextRun({ text: event.eventType })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Category
+                    ...(event.eventCategory ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "📂 Category: ", bold: true }),
+                                new TextRun({ text: event.eventCategory })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Target Audience
+                    ...(event.targetAudience ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "👥 Target Audience: ", bold: true }),
+                                new TextRun({ text: event.targetAudience })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Expected Attendees
+                    ...(event.expectedAttendees ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "📊 Expected Attendees: ", bold: true }),
+                                new TextRun({ text: event.expectedAttendees.toString() })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Created by
+                    ...(event.createdBy?.name ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "👤 Created by: ", bold: true }),
+                                new TextRun({ text: event.createdBy.name })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Teachers Involved
+                    ...(event.teachersInvolved?.length ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "👨‍🏫 Teachers Involved: ", bold: true }),
+                                new TextRun({ text: event.teachersInvolved.map(t => t.name).join(', ') })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Students Involved
+                    ...(event.studentsInvolved?.length ? [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "👨‍🎓 Students Involved: ", bold: true }),
+                                new TextRun({ text: event.studentsInvolved.map(s => `${s.name} (${s.usn || s.rollNumber})`).join(', ') })
+                            ]
+                        })
+                    ] : []),
+                    
+                    // Resources Required
+                    ...(event.resourcesRequired ? [
+                        new Paragraph({
+                            children: [new TextRun({ text: "🛠️ Resources Required:", bold: true })],
+                            spacing: { before: 200 }
+                        }),
+                        new Paragraph({
+                            text: event.resourcesRequired,
+                            spacing: { after: 200 }
+                        })
+                    ] : []),
+                    
+                    // Outcome
+                    ...(event.outcome ? [
+                        new Paragraph({
+                            children: [new TextRun({ text: "🎯 Outcome:", bold: true })],
+                            spacing: { before: 200 }
+                        }),
+                        new Paragraph({
+                            text: event.outcome,
+                            spacing: { after: 200 }
+                        })
+                    ] : []),
+                    
+                    // Budget Information
+                    ...(event.budget ? [
+                        new Paragraph({
+                            children: [new TextRun({ text: "💰 Budget Information:", bold: true })],
+                            spacing: { before: 200 }
+                        }),
+                        ...(event.budget.requested ? [new Paragraph({ text: `Requested: ₹${event.budget.requested}` })] : []),
+                        ...(event.budget.approved ? [new Paragraph({ text: `Approved: ₹${event.budget.approved}` })] : []),
+                        ...(event.budget.utilized ? [new Paragraph({ text: `Utilized: ₹${event.budget.utilized}` })] : []),
+                        ...(event.budget.description ? [new Paragraph({ text: `Description: ${event.budget.description}` })] : []),
+                    ] : []),
+                    
+                    // Images with actual embedding
+                    ...imageParagraphs,
+                    
+                    // Footer
+                    new Paragraph({
+                        children: [new TextRun({ text: "Status Information:", bold: true })],
+                        spacing: { before: 400 }
+                    }),
+                    new Paragraph({ text: `Status: ${event.status || 'Active'}` }),
+                    new Paragraph({ text: `Approval Status: ${event.approvalStatus || 'Pending'}` }),
+                    new Paragraph({ text: `Created: ${new Date(event.createdAt).toLocaleDateString()}` }),
+                    new Paragraph({ text: `Last Updated: ${new Date(event.updatedAt).toLocaleDateString()}` }),
+                    new Paragraph({ text: `Downloaded by: HOD Dashboard on ${new Date().toLocaleDateString()}` }),
+                ]
+            }]
+        });
+        
+        // Generate and download
+        const blob = await docx.Packer.toBlob(doc);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `teacher-event-${event.title.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        console.log('✅ Teacher event DOCX document downloaded successfully');
+        showNotification('Teacher event Word document downloaded successfully!', 'success');
+        
+        // Close any open modals
+        document.querySelectorAll('.modal').forEach(modal => modal.remove());
+        
+    } catch (error) {
+        console.error('❌ Error generating DOCX:', error);
+        console.log('🔄 Falling back to HTML Word document generation');
+        showNotification('DOCX generation failed, creating HTML document instead', 'warning');
+        generateHTMLWordDocument(event);
+    }
+}
+
+async function generateHTMLWordDocument(event) {
+    // Fallback HTML-based Word document (without images)
+    const wordContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+            <meta charset='utf-8'>
+            <title>Teacher Event - ${event.title}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                h1 { text-align: center; color: #2d3748; margin-bottom: 30px; }
+                .date-banner { background: #f7fafc; border-left: 4px solid #3182ce; padding: 12px; margin: 20px 0; }
+                .section { margin: 16px 0; }
+                .section strong { color: #2d3748; }
+                .footer-info { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <h1>${event.title}</h1>
+            <div class="date-banner">
+                <strong>📅 Event Date:</strong> ${new Date(event.eventDate).toLocaleDateString()}
+            </div>
+            ${event.description ? `<div class="section"><strong>Description:</strong><br/>${event.description}</div>` : ''}
+            ${event.location ? `<div class="section"><strong>📍 Location:</strong> ${event.location}</div>` : ''}
+            ${event.eventType ? `<div class="section"><strong>🎯 Event Type:</strong> ${event.eventType}</div>` : ''}
+            ${event.eventCategory ? `<div class="section"><strong>📂 Category:</strong> ${event.eventCategory}</div>` : ''}
+            ${event.targetAudience ? `<div class="section"><strong>👥 Target Audience:</strong> ${event.targetAudience}</div>` : ''}
+            ${event.expectedAttendees ? `<div class="section"><strong>📊 Expected Attendees:</strong> ${event.expectedAttendees}</div>` : ''}
+            ${event.createdBy?.name ? `<div class="section"><strong>👤 Created by:</strong> ${event.createdBy.name}</div>` : ''}
+            ${event.teachersInvolved?.length ? `<div class="section"><strong>👨‍🏫 Teachers Involved:</strong> ${event.teachersInvolved.map(t => t.name).join(', ')}</div>` : ''}
+            ${event.studentsInvolved?.length ? `<div class="section"><strong>👨‍🎓 Students Involved:</strong> ${event.studentsInvolved.map(s => `${s.name} (${s.usn || s.rollNumber})`).join(', ')}</div>` : ''}
+            ${event.resourcesRequired ? `<div class="section"><strong>🛠️ Resources Required:</strong><br/>${event.resourcesRequired}</div>` : ''}
+            ${event.outcome ? `<div class="section"><strong>🎯 Outcome:</strong><br/>${event.outcome}</div>` : ''}
+            ${event.budget ? `
+                <div class="section">
+                    <strong>💰 Budget Information:</strong><br/>
+                    ${event.budget.requested ? `Requested: ₹${event.budget.requested}<br/>` : ''}
+                    ${event.budget.approved ? `Approved: ₹${event.budget.approved}<br/>` : ''}
+                    ${event.budget.utilized ? `Utilized: ₹${event.budget.utilized}<br/>` : ''}
+                    ${event.budget.description ? `Description: ${event.budget.description}<br/>` : ''}
+                </div>
+            ` : ''}
+            ${event.images?.length ? `
+                <div class="section">
+                    <strong>📸 Event Images (${event.images.length}):</strong><br/>
+                    ${event.images.map((image, i) => `${i + 1}. ${image.fileName || `Event Image ${i + 1}`}`).join('<br/>')}
+                </div>
+            ` : ''}
+            <div class="footer-info">
+                <strong>Status:</strong> ${event.status || 'Active'}<br/>
+                <strong>Approval Status:</strong> ${event.approvalStatus || 'Pending'}<br/>
+                <strong>Created:</strong> ${new Date(event.createdAt).toLocaleDateString()}<br/>
+                <strong>Last Updated:</strong> ${new Date(event.updatedAt).toLocaleDateString()}<br/>
+                <strong>Downloaded by:</strong> HOD Dashboard on ${new Date().toLocaleDateString()}
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const blob = new Blob([wordContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `teacher-event-${event.title.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('✅ Teacher event Word document downloaded successfully (HTML fallback)');
+    showNotification('Teacher event Word document downloaded successfully!', 'success');
+    
+    // Close any open modals
+    document.querySelectorAll('.modal').forEach(modal => modal.remove());
 }
 
 async function deleteTeacherEvent(eventId) {
@@ -2172,4 +2752,456 @@ function logout() {
         api.clearToken();
         window.location.href = '/';
     }
+}
+
+// Letter Writing System
+let currentLetterType = null;
+let currentUserData = null;
+
+// Letter templates and dynamic fields
+const letterTemplates = {
+    event: {
+        title: "Event Application Letter",
+        dynamicFields: [
+            { name: "eventName", label: "Event Name", type: "text", required: true },
+            { name: "eventDate", label: "Proposed Event Date", type: "date", required: true },
+            { name: "eventVenue", label: "Proposed Venue", type: "text", required: true },
+            { name: "expectedParticipants", label: "Expected Participants", type: "number", required: true },
+            { name: "budgetRequired", label: "Budget Required (₹)", type: "number", required: false }
+        ],
+        subjectTemplate: "Application for Permission to Organize {eventName}",
+        bodyTemplate: `I am writing to formally request permission to organize "{eventName}" on {eventDate} at {eventVenue}.
+
+This event is planned as part of our departments academic and co-curricular activities. We expect approximately {expectedParticipants} participants to attend this event.
+
+The event will contribute significantly to the academic development and engagement of our students. We have planned comprehensive arrangements to ensure the smooth conduct of the event.
+
+I kindly request your approval and support for organizing this event. We are committed to conducting it in accordance with all college guidelines and policies.`
+    },
+    reimbursement: {
+        title: "Reimbursement Request Letter",
+        dynamicFields: [
+            { name: "expenseCategory", label: "Expense Category", type: "select", options: ["Travel", "Accommodation", "Materials", "Equipment", "Event Expenses", "Other"], required: true },
+            { name: "expenseAmount", label: "Amount (₹)", type: "number", required: true },
+            { name: "expenseDate", label: "Expense Date", type: "date", required: true },
+            { name: "purpose", label: "Purpose/Event", type: "text", required: true },
+            { name: "attachments", label: "Attached Documents", type: "text", required: true }
+        ],
+        subjectTemplate: "Request for Reimbursement - {expenseCategory} Expenses",
+        bodyTemplate: `I am writing to request reimbursement for {expenseCategory} expenses incurred for {purpose}.
+
+Details of Expenses:
+- Category: {expenseCategory}
+- Amount: ₹{expenseAmount}
+- Date of Expense: {expenseDate}
+- Purpose: {purpose}
+
+These expenses were incurred in the official capacity as part of my duties and responsibilities. All necessary supporting documents including {attachments} are attached herewith for your verification.
+
+The expenses were essential and have been incurred strictly in accordance with the college expense policy and guidelines.
+
+I kindly request your approval for the reimbursement of the above-mentioned amount. I am available to provide any additional information or clarification if required.`
+    },
+    "money-approval": {
+        title: "Money Approval Request Letter",
+        dynamicFields: [
+            { name: "requestAmount", label: "Requested Amount (₹)", type: "number", required: true },
+            { name: "purposeCategory", label: "Purpose Category", type: "select", options: ["Department Events", "Academic Activities", "Infrastructure", "Student Activities", "Equipment Purchase", "Other"], required: true },
+            { name: "timeframe", label: "Required Timeframe", type: "text", required: true },
+            { name: "beneficiaries", label: "Target Beneficiaries", type: "text", required: true },
+            { name: "justification", label: "Detailed Justification", type: "textarea", required: true }
+        ],
+        subjectTemplate: "Request for Budget Approval - {purposeCategory}",
+        bodyTemplate: `I am writing to formally request approval for a budget allocation of ₹{requestAmount} for {purposeCategory}.
+
+Request Details:
+- Amount Requested: ₹{requestAmount}
+- Purpose: {purposeCategory}
+- Timeline: {timeframe}
+- Beneficiaries: {beneficiaries}
+
+Justification:
+{justification}
+
+This allocation will significantly contribute to the departments objectives and will benefit {beneficiaries}. The requested amount has been carefully calculated based on current market rates and requirements.
+
+I have ensured that this request aligns with the departments annual budget plan and strategic objectives. The proposed expenditure will deliver measurable value and contribute to the overall academic excellence of our department.
+
+I kindly request your approval for this budget allocation. I am prepared to provide detailed cost breakdowns and any additional documentation required for the approval process.`
+    }
+};
+
+function initializeLetterWriting() {
+    console.log("🔄 Initializing letter writing system");
+    
+    // Get current user data
+    getCurrentUser().then(user => {
+        currentUserData = user;
+        setupLetterFormDefaults();
+    });
+    
+    // Add event listeners
+    document.getElementById("newLetterBtn")?.addEventListener("click", showLetterTypeSelection);
+    document.getElementById("cancelLetterBtn")?.addEventListener("click", hideLetterCreation);
+    document.getElementById("previewLetterBtn")?.addEventListener("click", generateLetterPreview);
+    document.getElementById("generateLetterBtn")?.addEventListener("click", generateLetter);
+    
+    // Letter type selection
+    document.querySelectorAll(".letter-type-card").forEach(card => {
+        card.addEventListener("click", function() {
+            selectLetterType(this.dataset.type);
+        });
+    });
+    
+    // Form field listeners for real-time preview
+    const formFields = ["letterDate", "letterTo", "letterFrom", "letterSubject", "letterBody"];
+    formFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener("input", generateLetterPreview);
+        }
+    });
+}
+
+function showLetterTypeSelection() {
+    console.log("📝 Showing letter type selection");
+    
+    // Hide letters list and show type selection
+    document.getElementById("lettersList").style.display = "none";
+    document.getElementById("letterTypeSelection").style.display = "block";
+    document.getElementById("letterCreationForm").style.display = "none";
+}
+
+function selectLetterType(type) {
+    console.log(`📋 Selected letter type: ${type}`);
+    
+    currentLetterType = type;
+    const template = letterTemplates[type];
+    
+    if (!template) {
+        showNotification("Invalid letter type selected", "error");
+        return;
+    }
+    
+    // Update form title
+    document.getElementById("letterFormTitle").textContent = template.title;
+    
+    // Show creation form and hide type selection
+    document.getElementById("letterTypeSelection").style.display = "none";
+    document.getElementById("letterCreationForm").style.display = "block";
+    
+    // Generate dynamic fields
+    generateDynamicFields(template.dynamicFields);
+    
+    // Set default values
+    setupLetterFormDefaults();
+    
+    // Generate initial preview
+    generateLetterPreview();
+}
+
+function generateDynamicFields(fields) {
+    const container = document.getElementById("dynamicFields");
+    container.innerHTML = "";
+    
+    fields.forEach(field => {
+        const fieldDiv = document.createElement("div");
+        fieldDiv.className = "form-group dynamic-field";
+        
+        let inputHtml = "";
+        
+        switch (field.type) {
+            case "text":
+            case "number":
+            case "date":
+                inputHtml = `<input type="${field.type}" id="dynamic_${field.name}" ${field.required ? "required" : ""} placeholder="${field.label}">`;
+                break;
+            case "textarea":
+                inputHtml = `<textarea id="dynamic_${field.name}" rows="3" ${field.required ? "required" : ""} placeholder="${field.label}"></textarea>`;
+                break;
+            case "select":
+                const options = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
+                inputHtml = `<select id="dynamic_${field.name}" ${field.required ? "required" : ""}><option value="">Select ${field.label}</option>${options}</select>`;
+                break;
+        }
+        
+        fieldDiv.innerHTML = `
+            <label for="dynamic_${field.name}">${field.label}${field.required ? " *" : ""}</label>
+            ${inputHtml}
+        `;
+        
+        container.appendChild(fieldDiv);
+        
+        // Add event listener for real-time preview
+        const input = document.getElementById(`dynamic_${field.name}`);
+        if (input) {
+            input.addEventListener("input", generateLetterPreview);
+        }
+    });
+}
+
+function setupLetterFormDefaults() {
+    if (!currentUserData) return;
+    
+    // Set current date
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("letterDate").value = today;
+    
+    // Set from field with current user data
+    const fromField = document.getElementById("letterFrom");
+    if (fromField) {
+        fromField.value = `${currentUserData.name}
+Head of Department
+${currentUserData.department?.name || "Department"}
+${currentUserData.college || "College Name"}`;
+    }
+}
+
+function generateLetterPreview() {
+    if (!currentLetterType) return;
+    
+    const template = letterTemplates[currentLetterType];
+    const previewContainer = document.getElementById("letterPreview");
+    
+    // Get form values
+    const formData = getLetterFormData();
+    
+    if (!formData.letterDate && !formData.letterTo && !formData.letterSubject && !formData.letterBody) {
+        previewContainer.innerHTML = `
+            <div class="preview-placeholder">
+                <i class="fas fa-file-alt"></i>
+                <p>Fill in the form to see letter preview</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Process template with form data
+    const processedSubject = processTemplate(template.subjectTemplate, formData);
+    const processedBody = processTemplate(template.bodyTemplate, formData);
+    
+    // Generate letter preview HTML
+    const letterHtml = `
+        <div class="letter-content">
+            <div class="letter-header">
+                <div class="letter-date">${formData.letterDate ? formatDate(formData.letterDate) : "[Date]"}</div>
+            </div>
+            
+            <div class="letter-address">
+                <div class="letter-to">
+                    <strong>To:</strong>
+                    ${formData.letterTo || "[Recipient]"}
+                </div>
+            </div>
+            
+            <div class="letter-subject">
+                <strong>Subject:</strong> ${formData.letterSubject || processedSubject}
+            </div>
+            
+            <div class="letter-salutation">
+                Respected Sir/Madam,
+            </div>
+            
+            <div class="letter-body">
+                ${formData.letterBody || processedBody}
+            </div>
+            
+            <div class="letter-signature">
+                Thanking you,<br>
+                Yours sincerely,
+                <strong>${formData.letterFrom?.split("")[0] || "[Your Name]"}</strong>
+                <div style="margin-top: 10px; font-size: 0.9em;">
+                    ${formData.letterFrom?.split("").slice(1).join("<br>") || "[Your Designation]"}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    previewContainer.innerHTML = letterHtml;
+}
+
+function getLetterFormData() {
+    const data = {
+        letterDate: document.getElementById("letterDate")?.value || "",
+        letterTo: document.getElementById("letterTo")?.value || "",
+        letterFrom: document.getElementById("letterFrom")?.value || "",
+        letterSubject: document.getElementById("letterSubject")?.value || "",
+        letterBody: document.getElementById("letterBody")?.value || ""
+    };
+    
+    // Get dynamic field values
+    if (currentLetterType) {
+        const template = letterTemplates[currentLetterType];
+        template.dynamicFields.forEach(field => {
+            const input = document.getElementById(`dynamic_${field.name}`);
+            if (input) {
+                data[field.name] = input.value;
+            }
+        });
+    }
+    
+    return data;
+}
+
+function processTemplate(template, data) {
+    let processed = template;
+    
+    // Replace placeholders with actual values
+    Object.keys(data).forEach(key => {
+        const value = data[key];
+        if (value) {
+            // Handle simple replacements
+            const simpleRegex = new RegExp(`\{${key}\}`, "g");
+            processed = processed.replace(simpleRegex, value);
+        }
+    });
+    
+    // Clean up any remaining placeholders
+    processed = processed.replace(/\{[^}]+\}/g, "");
+    
+    return processed;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+}
+
+function generateLetter() {
+    console.log("📄 Generating letter document");
+    
+    if (!currentLetterType) {
+        showNotification("Please select a letter type first", "error");
+        return;
+    }
+    
+    const formData = getLetterFormData();
+    
+    // Validate required fields
+    if (!formData.letterDate || !formData.letterTo || !formData.letterSubject) {
+        showNotification("Please fill in all required fields", "error");
+        return;
+    }
+    
+    try {
+        // Generate Word document
+        generateLetterDocument(formData);
+        showNotification("Letter generated successfully!", "success");
+    } catch (error) {
+        console.error("Error generating letter:", error);
+        showNotification("Failed to generate letter", "error");
+    }
+}
+
+function generateLetterDocument(formData) {
+    const template = letterTemplates[currentLetterType];
+    const processedSubject = formData.letterSubject || processTemplate(template.subjectTemplate, formData);
+    const processedBody = formData.letterBody || processTemplate(template.bodyTemplate, formData);
+    
+    // Create HTML document for Word format
+    const documentContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="utf-8">
+            <title>${template.title}</title>
+            <style>
+                body {
+                    font-family: "Times New Roman", serif;
+                    font-size: 12pt;
+                    line-height: 1.8;
+                    margin: 1in;
+                    color: #000;
+                }
+                .letter-header { text-align: right; margin-bottom: 30px; }
+                .letter-date { font-weight: bold; }
+                .letter-address { margin-bottom: 30px; }
+                .letter-subject { 
+                    margin: 30px 0; 
+                    padding: 10px; 
+                    background: #f5f5f5; 
+                    border-left: 4px solid #333;
+                    font-weight: bold;
+                }
+                .letter-body { 
+                    margin: 30px 0; 
+                    text-align: justify; 
+                    line-height: 2;
+                }
+                .letter-signature { 
+                    margin-top: 60px; 
+                    text-align: right; 
+                }
+                .signature-space {
+                    margin-top: 40px;
+                    margin-bottom: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="letter-header">
+                <div class="letter-date">${formatDate(formData.letterDate)}</div>
+            </div>
+            
+            <div class="letter-address">
+                <strong>To:</strong><br>
+${processedBody.replace(/\n/g, "<br><br>")}
+            </div>
+            
+            <div class="letter-subject">
+                <strong>Subject:</strong> ${processedSubject}
+            </div>
+            
+            <div style="margin: 30px 0;">
+                Respected Sir/Madam,
+            </div>
+            
+            <div class="letter-body">
+${processedBody.replace(/\n/g, "<br><br>")}
+            </div>
+            
+            <div class="letter-signature">
+                Thanking you,<br><br>
+                Yours sincerely,
+                <div class="signature-space"></div>
+                <strong>${formData.letterFrom.split("")[0]}</strong><br>
+                ${formData.letterFrom.split("").slice(1).join("<br>")}
+            </div>
+        </body>
+        </html>
+    `;
+    
+    // Create and download the document
+    const blob = new Blob([documentContent], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${template.title.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function hideLetterCreation() {
+    console.log("❌ Hiding letter creation form");
+    
+    // Reset form
+    currentLetterType = null;
+    
+    // Show letters list and hide creation form
+    document.getElementById("lettersList").style.display = "block";
+    document.getElementById("letterCreationForm").style.display = "none";
+    document.getElementById("letterTypeSelection").style.display = "none";
+    
+    // Clear form
+    document.querySelectorAll("#letterCreationForm input, #letterCreationForm textarea, #letterCreationForm select").forEach(field => {
+        field.value = "";
+    });
+    
+    // Clear dynamic fields
+    document.getElementById("dynamicFields").innerHTML = "";
 }

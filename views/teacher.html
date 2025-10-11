@@ -190,45 +190,146 @@
             <!-- Profile Section -->
             <section id="profile" class="content-section">
                 <div class="section-header">
-                    <h2>My Profile</h2>
-                    <button class="btn btn-primary" id="editProfileBtn">
-                        <i class="fas fa-edit"></i> Edit Profile
-                    </button>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="uploadProfileImageBtn">
+                            <i class="fas fa-camera"></i> Upload Photo
+                        </button>
+                        <button class="btn btn-primary" id="editProfileBtn">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
                 </div>
 
                 <div class="profile-content">
-                    <div class="profile-card">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <i class="fas fa-user"></i>
+                    <div class="profile-main-card">
+                        <div class="profile-hero">
+                            <div class="profile-avatar-large" id="profileAvatarContainer">
+                                <img id="profileImageDisplay" src="" alt="Profile Picture" style="display: none;">
+                                <i class="fas fa-user" id="profileDefaultIcon"></i>
+                                <div class="avatar-overlay" id="avatarOverlay">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Change Photo</span>
+                                </div>
                             </div>
-                            <div class="profile-info">
-                                <h3 id="profileName">Loading...</h3>
-                                <p id="profileDesignation">Loading...</p>
-                                <p id="profileDepartment">Loading...</p>
+                            <div class="profile-identity">
+                                <h2 id="profileName">Loading...</h2>
+                                <p id="profileDesignation" class="designation-badge">Loading...</p>
+                                <p id="profileDepartment" class="department-info">Loading...</p>
+                                <div class="profile-status">
+                                    <span class="status-indicator active"></span>
+                                    <span>Active</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="profile-details">
-                            <div class="detail-row">
-                                <label>Email:</label>
-                                <span id="profileEmail">Loading...</span>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" id="profileProjectsCount">0</div>
+                                <div class="stat-label">Projects Mentored</div>
                             </div>
-                            <div class="detail-row">
-                                <label>Employee ID:</label>
-                                <span id="profileEmployeeId">Loading...</span>
+                            <div class="stat-item">
+                                <div class="stat-number" id="profileStudentsCount">0</div>
+                                <div class="stat-label">Students Assigned</div>
                             </div>
-                            <div class="detail-row">
-                                <label>Phone:</label>
-                                <span id="profilePhone">Loading...</span>
+                            <div class="stat-item">
+                                <div class="stat-number" id="profileEventsCount">0</div>
+                                <div class="stat-label">Events Created</div>
                             </div>
-                            <div class="detail-row">
-                                <label>Joined:</label>
-                                <span id="profileJoinDate">Loading...</span>
+                            <div class="stat-item">
+                                <div class="stat-number" id="profileClubsCount">0</div>
+                                <div class="stat-label">Clubs Managed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-details-grid">
+                        <div class="details-card">
+                            <h3><i class="fas fa-id-card"></i> Personal Information</h3>
+                            <div class="details-content">
+                                <div class="detail-row">
+                                    <label>Full Name:</label>
+                                    <span id="profileFullName">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Email Address:</label>
+                                    <span id="profileEmail">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Employee ID:</label>
+                                    <span id="profileEmployeeId">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Phone Number:</label>
+                                    <span id="profilePhone">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Date Joined:</label>
+                                    <span id="profileJoinDate">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-card">
+                            <h3><i class="fas fa-building"></i> Professional Information</h3>
+                            <div class="details-content">
+                                <div class="detail-row">
+                                    <label>Position:</label>
+                                    <span id="profilePosition">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Department:</label>
+                                    <span id="profileDept">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Specialization:</label>
+                                    <span id="profileSpecialization">Computer Science</span>
+                                </div>
+                                <div class="detail-row">
+                                    <label>Experience:</label>
+                                    <span id="profileExperience">5+ years</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-card">
+                            <h3><i class="fas fa-chart-line"></i> Recent Activity</h3>
+                            <div class="details-content">
+                                <div class="activity-timeline">
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-project-diagram"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <p>Approved 2 student projects</p>
+                                            <span class="activity-time">2 days ago</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-calendar"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <p>Created workshop event</p>
+                                            <span class="activity-time">1 week ago</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <p>Updated club activities</p>
+                                            <span class="activity-time">2 weeks ago</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Hidden file input for image upload -->
+                <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
             </section>
         </main>
     </div>

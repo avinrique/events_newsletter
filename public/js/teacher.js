@@ -116,6 +116,8 @@ class TeacherDashboard {
                     this.viewEvent(eventId);
                 } else if (action === 'edit') {
                     this.editEvent(eventId);
+                } else if (action === 'download') {
+                    this.downloadEvent(eventId);
                 } else if (action === 'delete') {
                     this.deleteEvent(eventId);
                 }
@@ -334,7 +336,7 @@ class TeacherDashboard {
             events: 'My Events',
             projects: 'My Projects',
             students: 'My Students',
-            profile: 'My Profile'
+            profile: 'Profile'
         };
         document.getElementById('pageTitle').textContent = titles[sectionName] || 'Teacher Dashboard';
 
@@ -584,6 +586,9 @@ class TeacherDashboard {
                             <button class="btn btn-sm btn-outline-secondary" data-event-action="edit" data-event-id="${event._id}" style="padding: 6px 10px; font-size: 12px;">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
+                            <button class="btn btn-sm btn-outline-success" data-event-action="download" data-event-id="${event._id}" style="padding: 6px 10px; font-size: 12px;">
+                                <i class="fas fa-download"></i> Download
+                            </button>
                             <button class="btn btn-sm btn-outline-danger" data-event-action="delete" data-event-id="${event._id}" style="padding: 6px 10px; font-size: 12px;">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
@@ -712,7 +717,8 @@ class TeacherDashboard {
         }).join('');
     }
 
-    loadProfile() {
+    async loadProfile() {
+        // Load basic profile info
         document.getElementById('profileName').textContent = this.currentUser.name;
         document.getElementById('profileDesignation').textContent = this.currentUser.designation?.title || 'Teacher';
         document.getElementById('profileDepartment').textContent = this.currentUser.department?.name || 'Unknown';
@@ -720,6 +726,137 @@ class TeacherDashboard {
         document.getElementById('profileEmployeeId').textContent = this.currentUser.employeeId || 'N/A';
         document.getElementById('profilePhone').textContent = this.currentUser.contactNumber || 'N/A';
         document.getElementById('profileJoinDate').textContent = this.formatDate(this.currentUser.createdAt);
+        
+        // Load enhanced profile elements
+        document.getElementById('profileFullName').textContent = this.currentUser.name;
+        document.getElementById('profilePosition').textContent = this.currentUser.position || 'Teacher';
+        document.getElementById('profileDept').textContent = this.currentUser.department?.name || 'Unknown';
+        
+        // Load profile image if exists
+        if (this.currentUser.profileImage) {
+            const img = document.getElementById('profileImageDisplay');
+            const icon = document.getElementById('profileDefaultIcon');
+            
+            img.src = this.currentUser.profileImage;
+            img.style.display = 'block';
+            icon.style.display = 'none';
+        }
+        
+        // Load statistics
+        await this.loadProfileStats();
+        
+        // Setup image upload functionality
+        this.setupImageUpload();
+    }
+    
+    async loadProfileStats() {
+        try {
+            // Count projects mentored by this teacher
+            const projectsResponse = await this.api.request('/projects');
+            const myProjects = projectsResponse.success ? 
+                projectsResponse.data.filter(p => p.primaryMentor === this.currentUser._id) : [];
+            
+            // Count students assigned to this teacher
+            const studentsResponse = await this.api.request('/users/teachers/department');
+            const myStudents = studentsResponse.success ? 
+                studentsResponse.data.filter(s => s.proctor === this.currentUser._id || s.classTeacher === this.currentUser._id) : [];
+            
+            // Count events created by this teacher
+            const eventsResponse = await this.api.request('/teacher-events');
+            const myEvents = eventsResponse.success ? 
+                eventsResponse.data.filter(e => e.createdBy === this.currentUser._id) : [];
+            
+            // Count clubs managed by this teacher
+            const clubsResponse = await this.api.request('/clubs');
+            const myClubs = clubsResponse.success ? 
+                clubsResponse.data.filter(c => c.mentorId === this.currentUser._id) : [];
+            
+            // Update stats
+            document.getElementById('profileProjectsCount').textContent = myProjects.length;
+            document.getElementById('profileStudentsCount').textContent = myStudents.length;
+            document.getElementById('profileEventsCount').textContent = myEvents.length;
+            document.getElementById('profileClubsCount').textContent = myClubs.length;
+            
+        } catch (error) {
+            console.error('Error loading profile stats:', error);
+            // Set default values if error
+            document.getElementById('profileProjectsCount').textContent = '0';
+            document.getElementById('profileStudentsCount').textContent = '0';
+            document.getElementById('profileEventsCount').textContent = '0';
+            document.getElementById('profileClubsCount').textContent = '0';
+        }
+    }
+    
+    setupImageUpload() {
+        const uploadBtn = document.getElementById('uploadProfileImageBtn');
+        const fileInput = document.getElementById('profileImageInput');
+        const avatarContainer = document.getElementById('profileAvatarContainer');
+        
+        // Upload button click
+        uploadBtn?.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Avatar click
+        avatarContainer?.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // File input change
+        fileInput?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.handleImageUpload(file);
+            }
+        });
+    }
+    
+    async handleImageUpload(file) {
+        // Validate file
+        if (!file.type.startsWith('image/')) {
+            this.showError('Please select a valid image file');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            this.showError('Image size should be less than 5MB');
+            return;
+        }
+        
+        try {
+            this.showLoading();
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('profileImage', file);
+            
+            // Upload image
+            const response = await this.api.uploadProfileImage(formData);
+            
+            if (response.success) {
+                // Update UI immediately
+                const img = document.getElementById('profileImageDisplay');
+                const icon = document.getElementById('profileDefaultIcon');
+                
+                // Create preview URL
+                const previewUrl = URL.createObjectURL(file);
+                img.src = previewUrl;
+                img.style.display = 'block';
+                icon.style.display = 'none';
+                
+                // Update current user data
+                this.currentUser.profileImage = response.data.profileImage;
+                
+                this.showSuccess('Profile image updated successfully!');
+            } else {
+                this.showError(response.message || 'Failed to upload image');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            this.showError('Failed to upload image');
+        } finally {
+            this.hideLoading();
+        }
     }
 
     showEditProfileModal() {
@@ -3829,6 +3966,67 @@ class TeacherDashboard {
                 console.error('Error deleting event:', error);
                 this.showError('Failed to delete event');
             }
+        }
+    }
+
+    async downloadEvent(eventId) {
+        try {
+            const response = await this.api.request(`/teacher-events/${eventId}`);
+            
+            if (response.success) {
+                const event = response.data;
+                
+                // Create downloadable JSON data
+                const downloadData = {
+                    event: {
+                        title: event.title,
+                        description: event.description,
+                        eventType: event.eventType,
+                        eventDate: event.eventDate,
+                        location: event.location,
+                        eventCategory: event.eventCategory,
+                        targetAudience: event.targetAudience,
+                        expectedAttendees: event.expectedAttendees,
+                        resourcesRequired: event.resourcesRequired,
+                        teachersInvolved: event.teachersInvolved?.map(t => ({
+                            name: t.name,
+                            email: t.email,
+                            department: t.department?.name
+                        })),
+                        status: event.status,
+                        approvalStatus: event.approvalStatus,
+                        images: event.images?.map(img => ({
+                            fileName: img.fileName,
+                            fileUrl: img.fileUrl
+                        })),
+                        budget: event.budget,
+                        createdAt: event.createdAt,
+                        updatedAt: event.updatedAt
+                    },
+                    exportedAt: new Date().toISOString(),
+                    exportedBy: this.currentUser?.name || 'Teacher'
+                };
+                
+                // Create and download the file
+                const blob = new Blob([JSON.stringify(downloadData, null, 2)], { 
+                    type: 'application/json' 
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `event-${event.title.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                this.showSuccess('Event downloaded successfully!');
+            } else {
+                this.showError(response.message || 'Failed to download event');
+            }
+        } catch (error) {
+            console.error('Error downloading event:', error);
+            this.showError('Failed to download event');
         }
     }
 
