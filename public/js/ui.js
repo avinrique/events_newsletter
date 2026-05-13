@@ -225,16 +225,70 @@
     }
 
     /* ---------------- sidebar toggle (mobile) ---------------- */
+    function findSidebar() {
+        return document.querySelector('.app-sidebar, .sidebar, nav.sidebar, nav.admin-nav, nav.superadmin-nav');
+    }
+
+    function toggleSidebar(force) {
+        const sb = findSidebar();
+        if (!sb) return;
+        const open = force != null ? force : !sb.classList.contains('open');
+        sb.classList.toggle('open', open);
+        document.body.classList.toggle('sidebar-open', open);
+        let bd = document.getElementById('__sbBackdrop');
+        if (open) {
+            if (!bd) {
+                bd = document.createElement('div');
+                bd.id = '__sbBackdrop';
+                bd.className = 'sidebar-backdrop';
+                bd.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.4);z-index:998;';
+                bd.addEventListener('click', () => toggleSidebar(false));
+                document.body.appendChild(bd);
+            }
+            bd.style.display = 'block';
+        } else if (bd) {
+            bd.style.display = 'none';
+        }
+    }
+
+    function injectHamburger() {
+        // Don't inject on the auth/landing page (no sidebar there).
+        if (!findSidebar()) return;
+        if (document.getElementById('__sbToggle')) return;
+        const btn = document.createElement('button');
+        btn.id = '__sbToggle';
+        btn.setAttribute('aria-label', 'Toggle navigation');
+        btn.innerHTML = '<i class="fas fa-bars"></i>';
+        btn.style.cssText = [
+            'position:fixed', 'top:12px', 'left:12px', 'z-index:1000',
+            'width:40px', 'height:40px', 'border-radius:8px',
+            'background:#667eea', 'color:#fff', 'border:none',
+            'box-shadow:0 4px 12px rgba(15,23,42,0.2)',
+            'font-size:1.1rem', 'cursor:pointer', 'display:none'
+        ].join(';');
+        btn.addEventListener('click', () => toggleSidebar());
+        document.body.appendChild(btn);
+
+        const apply = () => {
+            const small = window.matchMedia('(max-width: 1023.98px)').matches;
+            btn.style.display = small ? 'inline-flex' : 'none';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            if (!small) toggleSidebar(false);
+        };
+        apply();
+        window.addEventListener('resize', apply);
+    }
+
     function bindSidebarToggle() {
         document.addEventListener('click', (e) => {
             const t = e.target.closest('[data-sidebar-toggle]');
-            if (t) {
-                e.preventDefault();
-                document.body.classList.toggle('sidebar-open');
-                return;
+            if (t) { e.preventDefault(); toggleSidebar(); return; }
+            // close when an in-sidebar nav link is clicked on mobile
+            const link = e.target.closest('.app-sidebar a, .sidebar a, .nav-link');
+            if (link && window.matchMedia('(max-width: 1023.98px)').matches) {
+                toggleSidebar(false);
             }
-            const b = e.target.closest('.sidebar-backdrop');
-            if (b) document.body.classList.remove('sidebar-open');
         });
     }
 
@@ -278,6 +332,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         bindSidebarToggle();
+        injectHamburger();
         ensureToastStack();
         // shim legacy global helpers so older inline calls still work:
         if (!window.showNotification) {
