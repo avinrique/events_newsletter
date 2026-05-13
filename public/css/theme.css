@@ -693,8 +693,11 @@ button.btn {
     color: var(--color-primary);
     border-bottom-color: var(--color-primary);
 }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+/* Only apply to tab panels that follow a .tab-bar (theme-scoped).
+   The legacy student modal uses .tab-content as a *container* of .tab-pane
+   children; scoping prevents this rule from hiding that container. */
+.tab-bar ~ .tab-content { display: none; }
+.tab-bar ~ .tab-content.active { display: block; }
 
 /* ---------------- Tables ---------------- */
 .t-table-wrap {
