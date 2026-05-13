@@ -2889,12 +2889,10 @@ I kindly request your approval for this budget allocation. I am prepared to prov
 
 function initializeLetterWriting() {
     console.log("🔄 Initializing letter writing system");
-    
-    // Get current user data
-    getCurrentUser().then(user => {
-        currentUserData = user;
-        setupLetterFormDefaults();
-    });
+
+    // Reuse the global currentUser that hod.js's auth flow already populated.
+    currentUserData = currentUser;
+    setupLetterFormDefaults();
     
     // Add event listeners
     document.getElementById("newLetterBtn")?.addEventListener("click", showLetterTypeSelection);
