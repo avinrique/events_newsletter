@@ -2060,12 +2060,12 @@ class TeacherDashboard {
 
     showSuccess(message) {
         // Implement success notification
-        alert(message); // Replace with proper notification system
+        UI.toast(message, 'info'); // Replace with proper notification system
     }
 
     showError(message) {
         // Implement error notification
-        alert(message); // Replace with proper notification system
+        UI.toast(message, 'info'); // Replace with proper notification system
     }
 
     async handleLogout() {

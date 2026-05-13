@@ -4,23 +4,26 @@ const { protect, authorize } = require('../middleware/auth');
 const {
     getTeacherReport,
     getDepartmentTeachersReport,
-    downloadTeacherReport
+    downloadTeacherReport,
+    getDepartmentReport,
+    getStudentReport,
+    getDepartmentBudgets
 } = require('../controllers/report.controller');
 
 router.use(protect);
 
-// HOD access to teacher reports
-router.get('/teachers/:teacherId', getTeacherReport);
-router.get('/teachers/:teacherId/download', downloadTeacherReport);
-router.get('/department/teachers', getDepartmentTeachersReport);
+// HOD-scoped teacher reports
+router.get('/teachers/:teacherId',            getTeacherReport);
+router.get('/teachers/:teacherId/download',   downloadTeacherReport);
+router.get('/department/teachers',            getDepartmentTeachersReport);
 
-// Legacy routes (to be implemented)
-router.get('/department/:deptId', authorize('hod', 'admin'), (req, res) => {
-    res.json({ message: 'Get department report - To be implemented' });
-});
+// Consolidated department report (HOD/Admin)
+router.get('/department/:deptId',             authorize('hod', 'admin'), getDepartmentReport);
 
-router.get('/student/:studentId', (req, res) => {
-    res.json({ message: 'Get student report - To be implemented' });
-});
+// Student rollup (student themselves + their teacher/HOD/admin)
+router.get('/student/:studentId',             getStudentReport);
+
+// Budgets aggregation (HOD/Admin)
+router.get('/budgets/department/:deptId',     authorize('hod', 'admin'), getDepartmentBudgets);
 
 module.exports = router;

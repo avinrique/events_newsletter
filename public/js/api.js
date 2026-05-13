@@ -276,9 +276,19 @@ class API {
         });
     }
 
+    // Club single (newly added)
+    async getClub(id) {
+        return this.request(`/clubs/${id}`);
+    }
+
     // Event endpoints
-    async getEvents() {
-        return this.request('/events');
+    async getEvents(params = {}) {
+        const qs = new URLSearchParams(params).toString();
+        return this.request(`/events${qs ? '?' + qs : ''}`);
+    }
+
+    async getEvent(id) {
+        return this.request(`/events/${id}`);
     }
 
     async createEvent(eventData) {
@@ -286,6 +296,17 @@ class API {
             method: 'POST',
             body: eventData
         });
+    }
+
+    async updateEvent(id, eventData) {
+        return this.request(`/events/${id}`, {
+            method: 'PUT',
+            body: eventData
+        });
+    }
+
+    async deleteEvent(id) {
+        return this.request(`/events/${id}`, { method: 'DELETE' });
     }
 
     async approveEvent(id, data = {}) {
@@ -300,6 +321,31 @@ class API {
             method: 'PUT',
             body: data
         });
+    }
+
+    async updateEventBudget(id, data) {
+        return this.request(`/events/${id}/budget`, { method: 'PUT', body: data });
+    }
+
+    async utilizeEventBudget(id, amount) {
+        return this.request(`/events/${id}/budget/utilize`, { method: 'PUT', body: { amount } });
+    }
+
+    // Newsletter endpoints
+    async createNewsletter(data)   { return this.request('/newsletters', { method: 'POST', body: data }); }
+    async getNewsletters(params = {}) {
+        const qs = new URLSearchParams(params).toString();
+        return this.request(`/newsletters${qs ? '?' + qs : ''}`);
+    }
+    async getNewsletter(id)        { return this.request(`/newsletters/${id}`); }
+    async updateNewsletter(id, d)  { return this.request(`/newsletters/${id}`, { method: 'PUT', body: d }); }
+    async publishNewsletter(id)    { return this.request(`/newsletters/${id}/publish`, { method: 'PUT' }); }
+    async deleteNewsletter(id)     { return this.request(`/newsletters/${id}`, { method: 'DELETE' }); }
+
+    // Budgets aggregation
+    async getDepartmentBudgets(deptId, params = {}) {
+        const qs = new URLSearchParams(params).toString();
+        return this.request(`/reports/budgets/department/${deptId}${qs ? '?' + qs : ''}`);
     }
 
     // Project endpoints

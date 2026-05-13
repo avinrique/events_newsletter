@@ -3,6 +3,23 @@ const Project = require('../models/Project');
 const Certificate = require('../models/Certificate');
 const Internship = require('../models/Internship');
 const Event = require('../models/Event');
+const Club = require('../models/Club');
+const Department = require('../models/Department');
+
+function isHODOrAdmin(user) {
+    if (user.role === 'admin' || user.role === 'superadmin') return true;
+    if (user.role === 'hod') return true;
+    if (user.role === 'teacher' && user.position === 'HOD') return true;
+    return false;
+}
+
+function isHOD(user) {
+    return user.role === 'hod' || (user.role === 'teacher' && user.position === 'HOD');
+}
+
+function sameDept(user, deptId) {
+    return user.department && user.department.toString() === deptId.toString();
+}
 
 // @desc    Generate teacher activity report (HOD access)
 // @route   GET /api/reports/teachers/:teacherId
@@ -377,5 +394,213 @@ exports.downloadTeacherReport = async (req, res) => {
             message: 'Error downloading teacher report',
             error: error.message
         });
+    }
+};
+
+// @desc    Consolidated department report
+// @route   GET /api/reports/department/:deptId
+// @access  Private (HOD/Admin)
+exports.getDepartmentReport = async (req, res) => {
+    try {
+        const { deptId } = req.params;
+        if (!isHODOrAdmin(req.user)) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+        if (isHOD(req.user) && !sameDept(req.user, deptId)) {
+            return res.status(403).json({ success: false, message: 'You can only view your own department' });
+        }
+
+        const department = await Department.findById(deptId);
+        if (!department) return res.status(404).json({ success: false, message: 'Department not found' });
+
+        const [students, teachers, projects, clubs, events, certs, interns] = await Promise.all([
+            User.countDocuments({ department: deptId, role: 'student', isActive: true }),
+            User.countDocuments({ department: deptId, role: 'teacher', isActive: true }),
+            Project.find({ department: deptId }),
+            Club.find({ department: deptId }),
+            Event.find({ department: deptId }),
+            Certificate.find({}).populate({ path: 'student', match: { department: deptId } }),
+            Internship.find({}).populate({ path: 'student', match: { department: deptId } })
+        ]);
+
+        const countBy = (arr, field) => arr.reduce((acc, x) => {
+            const k = x[field] || 'unknown';
+            acc[k] = (acc[k] || 0) + 1;
+            return acc;
+        }, {});
+
+        const eventBudget = events.reduce((sum, e) => ({
+            requested: sum.requested + (e.budget?.totalRequested || 0),
+            approved:  sum.approved  + (e.budget?.totalApproved  || 0),
+            utilized:  sum.utilized  + (e.budget?.totalUtilized  || 0)
+        }), { requested: 0, approved: 0, utilized: 0 });
+
+        const projectBudget = projects.reduce((sum, p) => ({
+            requested: sum.requested + (p.budget?.totalRequested || 0),
+            approved:  sum.approved  + (p.budget?.totalApproved  || 0),
+            utilized:  sum.utilized  + (p.budget?.totalUtilized  || 0)
+        }), { requested: 0, approved: 0, utilized: 0 });
+
+        const certCount = certs.filter(c => c.student).length;
+        const internCount = interns.filter(i => i.student).length;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                department: { _id: department._id, name: department.name, code: department.code },
+                generatedAt: new Date(),
+                counts: {
+                    students, teachers,
+                    projects: projects.length,
+                    clubs: clubs.length,
+                    events: events.length,
+                    certificates: certCount,
+                    internships: internCount
+                },
+                projectsByStatus: countBy(projects, 'approvalStatus'),
+                clubsByStatus: countBy(clubs, 'status'),
+                eventsByStatus: countBy(events, 'status'),
+                budget: {
+                    events: eventBudget,
+                    projects: projectBudget,
+                    total: {
+                        requested: eventBudget.requested + projectBudget.requested,
+                        approved:  eventBudget.approved  + projectBudget.approved,
+                        utilized:  eventBudget.utilized  + projectBudget.utilized
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error generating department report:', error);
+        res.status(500).json({ success: false, message: 'Error generating department report', error: error.message });
+    }
+};
+
+// @desc    Per-student rollup
+// @route   GET /api/reports/student/:studentId
+// @access  Private (Teacher / HOD / Admin / self)
+exports.getStudentReport = async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const student = await User.findById(studentId)
+            .populate('department', 'name code')
+            .populate('proctor', 'name email')
+            .populate('classTeacher', 'name email')
+            .select('-password');
+        if (!student || student.role !== 'student') {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        if (req.user.role === 'student' && req.user._id.toString() !== studentId) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+        if ((req.user.role === 'teacher' || req.user.role === 'hod') &&
+            !sameDept(req.user, student.department._id)) {
+            return res.status(403).json({ success: false, message: 'Student is in another department' });
+        }
+
+        const [projects, certificates, internships, events] = await Promise.all([
+            Project.find({
+                $or: [{ createdBy: studentId }, { 'teamMembers.user': studentId }]
+            }).populate('primaryMentor', 'name'),
+            Certificate.find({ student: studentId }),
+            Internship.find({ student: studentId }),
+            Event.find({ 'participants.user': studentId, status: 'approved' }).select('title eventDate status')
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                student,
+                counts: {
+                    projects: projects.length,
+                    certificates: certificates.length,
+                    internships: internships.length,
+                    eventParticipations: events.length
+                },
+                projects,
+                certificates,
+                internships,
+                events
+            }
+        });
+    } catch (error) {
+        console.error('Error generating student report:', error);
+        res.status(500).json({ success: false, message: 'Error generating student report', error: error.message });
+    }
+};
+
+// @desc    Budget aggregation for a department
+// @route   GET /api/reports/budgets/department/:deptId
+// @access  Private (HOD/Admin)
+exports.getDepartmentBudgets = async (req, res) => {
+    try {
+        const { deptId } = req.params;
+        if (!isHODOrAdmin(req.user)) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+        if (isHOD(req.user) && !sameDept(req.user, deptId)) {
+            return res.status(403).json({ success: false, message: 'You can only view your own department' });
+        }
+
+        const yearFilter = req.query.year ? {
+            $expr: { $eq: [{ $year: '$createdAt' }, Number(req.query.year)] }
+        } : {};
+
+        const [events, projects] = await Promise.all([
+            Event.find({ department: deptId, ...yearFilter })
+                .populate('createdBy', 'name email')
+                .sort({ eventDate: -1 }),
+            Project.find({ department: deptId, ...yearFilter })
+                .populate('createdBy', 'name email')
+                .populate('primaryMentor', 'name')
+                .sort({ createdAt: -1 })
+        ]);
+
+        const sumBudgets = (arr) => arr.reduce((acc, item) => ({
+            requested: acc.requested + (item.budget?.totalRequested || 0),
+            approved:  acc.approved  + (item.budget?.totalApproved  || 0),
+            utilized:  acc.utilized  + (item.budget?.totalUtilized  || 0)
+        }), { requested: 0, approved: 0, utilized: 0 });
+
+        const eventTotal   = sumBudgets(events.filter(e => e.budget));
+        const projectTotal = sumBudgets(projects.filter(p => p.budget));
+
+        res.status(200).json({
+            success: true,
+            data: {
+                events: events.filter(e => e.budget && e.budget.totalRequested > 0).map(e => ({
+                    _id: e._id,
+                    title: e.title,
+                    type: 'event',
+                    status: e.status,
+                    creator: e.createdBy,
+                    date: e.eventDate,
+                    budget: e.budget
+                })),
+                projects: projects.filter(p => p.budget && p.budget.totalRequested > 0).map(p => ({
+                    _id: p._id,
+                    title: p.title,
+                    type: 'project',
+                    status: p.approvalStatus,
+                    creator: p.createdBy,
+                    mentor: p.primaryMentor,
+                    budget: p.budget
+                })),
+                totals: {
+                    events: eventTotal,
+                    projects: projectTotal,
+                    combined: {
+                        requested: eventTotal.requested + projectTotal.requested,
+                        approved:  eventTotal.approved  + projectTotal.approved,
+                        utilized:  eventTotal.utilized  + projectTotal.utilized
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error generating department budgets:', error);
+        res.status(500).json({ success: false, message: 'Error generating department budgets', error: error.message });
     }
 };

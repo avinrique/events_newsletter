@@ -64,7 +64,14 @@ exports.getUsers = async (req, res) => {
         }
 
         if (req.query.role) {
-            query.role = req.query.role;
+            // HOD is stored as role:'teacher' + position:'HOD'.
+            // Normalize so callers can filter ?role=hod naturally.
+            if (req.query.role === 'hod') {
+                query.role = 'teacher';
+                query.position = 'HOD';
+            } else {
+                query.role = req.query.role;
+            }
         }
 
         if (req.query.position !== undefined) {

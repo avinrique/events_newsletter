@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         currentUser = response.data;
         
         if (currentUser.role !== 'student') {
-            alert('Access denied. Student privileges required.');
+            UI.toast('Access denied. Student privileges required.', 'error');
             window.location.href = '/';
             return;
         }
@@ -484,20 +484,26 @@ async function loadRecentNotifications() {
 
 async function loadUpcomingEvents() {
     const eventsList = document.getElementById('upcomingEvents');
-    
-    // Placeholder events
-    eventsList.innerHTML = `
-        <div class="event-item">
-            <h5>Tech Symposium 2024</h5>
-            <p>Dec 15, 2024 • Department Event</p>
-        </div>
-        <div class="event-item">
-            <h5>Club Registration Open</h5>
-            <p>Ongoing • Join clubs now</p>
-        </div>
-    `;
-    
-    // TODO: Load actual events when API is ready
+    if (!eventsList) return;
+    try {
+        const response = await api.getEvents({ status: 'approved' });
+        const events = (response.data || [])
+            .filter(e => new Date(e.eventDate) >= new Date())
+            .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
+            .slice(0, 4);
+        if (!events.length) {
+            eventsList.innerHTML = '<p class="t-text-muted">No upcoming events.</p>';
+            return;
+        }
+        eventsList.innerHTML = events.map(e => `
+            <div class="event-item">
+                <h5>${UI.escapeHtml(e.title)}</h5>
+                <p>${UI.fmtDate(e.eventDate)} · ${UI.escapeHtml(e.venue || '')}</p>
+            </div>
+        `).join('');
+    } catch (err) {
+        eventsList.innerHTML = '<p class="form-error">Could not load events.</p>';
+    }
 }
 
 async function loadProfileInfo() {
@@ -534,34 +540,28 @@ async function loadPendingClubs() {
 
 async function loadUpcomingEventsList() {
     try {
-        const response = await api.getEvents();
+        const response = await api.getEvents({ status: 'approved' });
         const events = response.data || [];
-        
-        // Filter for upcoming and approved college events
-        const upcomingEvents = events.filter(event => {
-            const eventDate = new Date(event.startDate);
-            const today = new Date();
-            return eventDate >= today && event.status === 'approved';
-        });
-        
+        const upcomingEvents = events
+            .filter(event => new Date(event.eventDate) >= new Date())
+            .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+
         if (upcomingEvents.length === 0) {
-            document.getElementById('upcomingEventsList').innerHTML = '<p>No upcoming college events.</p>';
+            document.getElementById('upcomingEventsList').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-calendar"></i></div><div>No upcoming college events.</div></div>';
             return;
         }
-        
+
         document.getElementById('upcomingEventsList').innerHTML = upcomingEvents.map(event => `
-            <div class="event-item">
-                <h5>${event.title}</h5>
-                <p><strong>Type:</strong> ${event.eventType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-                <p><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}${event.endDate ? ` - ${new Date(event.endDate).toLocaleDateString()}` : ''}</p>
-                <p><strong>Venue:</strong> ${event.venue}</p>
-                ${event.description ? `<p><strong>Description:</strong> ${event.description}</p>` : ''}
-                ${event.organizerType ? `<p><strong>Organized by:</strong> ${event.organizerType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>` : ''}
-                ${event.capacity ? `<p><strong>Capacity:</strong> ${event.capacity}</p>` : ''}
-                
-                <div class="event-actions">
-                    <button data-action="register" data-event-id="${event._id}" class="btn btn-primary">Register</button>
+            <div class="event-item card">
+                <div class="card-header">
+                    <h5 class="card-title">${UI.escapeHtml(event.title)}</h5>
+                    ${UI.statusBadge(event.status)}
                 </div>
+                <p><strong>Type:</strong> ${UI.escapeHtml(event.eventType.replace(/-/g, ' '))} · <strong>Category:</strong> ${UI.escapeHtml(event.eventCategory)}</p>
+                <p><strong>Date:</strong> ${UI.fmtDate(event.eventDate)} · ${UI.escapeHtml(event.startTime)}–${UI.escapeHtml(event.endTime)}</p>
+                <p><strong>Venue:</strong> ${UI.escapeHtml(event.venue)}</p>
+                ${event.description ? `<p>${UI.escapeHtml(event.description)}</p>` : ''}
+                ${event.expectedParticipants ? `<p class="t-text-muted" style="font-size:.85rem"><i class="fas fa-users"></i> ${event.expectedParticipants} expected</p>` : ''}
             </div>
         `).join('');
         
@@ -1365,7 +1365,7 @@ async function deleteInternship(id) {
 }
 
 function editInternship(id) {
-    alert('Edit internship functionality - Coming soon!');
+    UI.toast('Edit internship functionality - Coming soon!', 'info');
 }
 
 async function deleteProject(id) {
@@ -1388,7 +1388,7 @@ function viewProject(id) {
 }
 
 function editProject(id) {
-    alert('Edit project functionality - Coming soon!');
+    UI.toast('Edit project functionality - Coming soon!', 'info');
 }
 
 async function showProjectDetails(projectId) {
@@ -1793,43 +1793,20 @@ async function deleteEventParticipation(id) {
 }
 
 function registerForEvent(eventId) {
-    alert('Event registration functionality will be implemented when teacher system is ready!');
+    UI.toast('Event registration functionality will be implemented when teacher system is ready!', 'info');
     // TODO: Implement when teacher/event management is ready
 }
 
 function viewCollegeEventDetails(eventId) {
-    alert('View college event details functionality will be implemented when teacher system is ready!');
+    UI.toast('View college event details functionality will be implemented when teacher system is ready!', 'info');
     // TODO: Implement when teacher/event management is ready
 }
 
 function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    const colors = {
-        success: '#48bb78',
-        error: '#f56565',
-        info: '#4c51bf',
-        warning: '#ed8936'
-    };
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        background: ${colors[type] || colors.info};
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    if (window.UI && window.UI.toast) return UI.toast(message, type);
+    const n = document.createElement('div');
+    n.textContent = message;
+    n.style.cssText = 'position:fixed;top:20px;right:20px;padding:1rem;background:#333;color:#fff;border-radius:8px;z-index:99999';
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3000);
 }

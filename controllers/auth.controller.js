@@ -553,16 +553,21 @@ exports.initializeSuperAdmin = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, email, contactNumber, semester, profileImage, proctor, classTeacher } = req.body;
-        
+        const { name, contactNumber, profileImage, proctor, classTeacher } = req.body;
+
+        // Strict whitelist: NEVER trust client to set role/position/department/
+        // designation/isActive/email/semester through self-update.
         const updateData = {};
         if (name) updateData.name = name;
-        if (email) updateData.email = email;
         if (contactNumber) updateData.contactNumber = contactNumber;
-        if (semester) updateData.semester = semester;
         if (profileImage) updateData.profileImage = profileImage;
-        if (proctor) updateData.proctor = proctor;
-        if (classTeacher) updateData.classTeacher = classTeacher;
+        // Mentor assignments are teacher-managed.
+        if (proctor && (req.user.role === 'teacher' || req.user.role === 'hod' || req.user.role === 'admin')) {
+            updateData.proctor = proctor;
+        }
+        if (classTeacher && (req.user.role === 'teacher' || req.user.role === 'hod' || req.user.role === 'admin')) {
+            updateData.classTeacher = classTeacher;
+        }
         
         const user = await User.findByIdAndUpdate(
             req.user.id,

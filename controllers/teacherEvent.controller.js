@@ -246,9 +246,19 @@ const createTeacherEvent = async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating teacher event:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: Object.values(error.errors).map(e => ({
+                    msg: e.message, path: e.path, type: 'field'
+                }))
+            });
+        }
         res.status(500).json({
             success: false,
-            message: 'Error creating teacher event'
+            message: 'Error creating teacher event',
+            error: error.message
         });
     }
 };

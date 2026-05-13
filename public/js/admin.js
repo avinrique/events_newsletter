@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         currentUser = response.data;
         
         if (currentUser.role !== 'admin') {
-            alert('Access denied. Admin privileges required.');
+            UI.toast('Access denied. Admin privileges required.', 'error');
             window.location.href = '/';
             return;
         }
@@ -419,36 +419,160 @@ async function handleAssignHOD(e) {
 
 // Reports Management
 async function loadReports() {
+    const reportsList = document.getElementById('reportsList');
+    reportsList.innerHTML = '<p class="t-text-muted">Loading departments…</p>';
     try {
-        // This would load department reports
-        const reportsList = document.getElementById('reportsList');
-        reportsList.innerHTML = '<p>Department reports will be displayed here...</p>';
-        
-        // TODO: Implement actual report loading
-        showNotification('Reports functionality - To be implemented', 'info');
+        const depts = await api.getDepartments();
+        if (!depts.data?.length) {
+            reportsList.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fas fa-folder-open"></i></div><div>No departments yet.</div></div>';
+            return;
+        }
+        reportsList.innerHTML = depts.data.map(d => `
+            <div class="card t-stack-sm">
+                <div class="card-header">
+                    <div>
+                        <h4 class="card-title">${UI.escapeHtml(d.name)}</h4>
+                        <p class="card-subtitle">Code: ${UI.escapeHtml(d.code)}</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" data-view-report="${d._id}"><i class="fas fa-chart-bar"></i> View Report</button>
+                </div>
+            </div>
+        `).join('');
+
+        reportsList.querySelectorAll('[data-view-report]').forEach(btn => {
+            btn.addEventListener('click', () => viewDepartmentReport(btn.dataset.viewReport));
+        });
     } catch (error) {
         console.error('Error loading reports:', error);
+        reportsList.innerHTML = `<p class="form-error">${UI.escapeHtml(error.message)}</p>`;
+    }
+}
+
+async function viewDepartmentReport(deptId) {
+    try {
+        const res = await api.request(`/reports/department/${deptId}`);
+        const r = res.data;
+        const html = `
+            <div class="modal show" id="__deptReportModal">
+              <div class="modal-content modal-lg">
+                <div class="modal-header">
+                  <h3>${UI.escapeHtml(r.department.name)} — Department Report</h3>
+                  <button class="modal-close" aria-label="Close">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <div class="t-grid t-grid-4">
+                    ${[
+                        ['Students', r.counts.students, 'users', ''],
+                        ['Teachers', r.counts.teachers, 'chalkboard-teacher', 'stat-info'],
+                        ['Projects', r.counts.projects, 'project-diagram', 'stat-warning'],
+                        ['Clubs', r.counts.clubs, 'users-cog', ''],
+                        ['Events', r.counts.events, 'calendar-alt', 'stat-success'],
+                        ['Certificates', r.counts.certificates, 'certificate', ''],
+                        ['Internships', r.counts.internships, 'briefcase', 'stat-info']
+                    ].map(([l, v, i, cls]) => `
+                      <div class="stat-card ${cls}">
+                        <div class="stat-icon"><i class="fas fa-${i}"></i></div>
+                        <div class="stat-body">
+                          <div class="stat-value">${v}</div>
+                          <div class="stat-label">${l}</div>
+                        </div>
+                      </div>`).join('')}
+                  </div>
+                  <h4 class="t-mt-4">Budget summary</h4>
+                  <div class="t-grid t-grid-3">
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-body"><div class="stat-value">${UI.fmtMoney(r.budget.total.requested)}</div><div class="stat-label">Requested</div></div></div>
+                    <div class="stat-card stat-success"><div class="stat-icon"><i class="fas fa-check"></i></div><div class="stat-body"><div class="stat-value">${UI.fmtMoney(r.budget.total.approved)}</div><div class="stat-label">Approved</div></div></div>
+                    <div class="stat-card stat-info"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-body"><div class="stat-value">${UI.fmtMoney(r.budget.total.utilized)}</div><div class="stat-label">Utilized</div></div></div>
+                  </div>
+                  <h4 class="t-mt-4">Status breakdown</h4>
+                  <div class="t-grid t-grid-3">
+                    <div class="card"><h5>Projects</h5>${Object.entries(r.projectsByStatus).map(([k, v]) => `<div class="t-row t-row-between"><span>${UI.escapeHtml(k)}</span><strong>${v}</strong></div>`).join('') || '<em>None</em>'}</div>
+                    <div class="card"><h5>Clubs</h5>${Object.entries(r.clubsByStatus).map(([k, v]) => `<div class="t-row t-row-between"><span>${UI.escapeHtml(k)}</span><strong>${v}</strong></div>`).join('') || '<em>None</em>'}</div>
+                    <div class="card"><h5>Events</h5>${Object.entries(r.eventsByStatus).map(([k, v]) => `<div class="t-row t-row-between"><span>${UI.escapeHtml(k)}</span><strong>${v}</strong></div>`).join('') || '<em>None</em>'}</div>
+                  </div>
+                  <p class="t-text-muted t-mt-4" style="font-size:.85rem">Generated ${new Date(r.generatedAt).toLocaleString()}</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-secondary" data-modal-close>Close</button>
+                </div>
+              </div>
+            </div>`;
+        document.getElementById('__deptReportModal')?.remove();
+        document.body.insertAdjacentHTML('beforeend', html);
+        UI.openModal(document.getElementById('__deptReportModal'));
+    } catch (e) {
+        UI.toast('Failed to load report: ' + e.message, 'error');
     }
 }
 
 // Budget Management
 async function loadBudgets() {
     try {
-        // Load departments into filter dropdown
         await loadBudgetFilters();
-        
-        // This would load budget data
-        document.getElementById('totalRequested').textContent = '₹0';
-        document.getElementById('totalApproved').textContent = '₹0';
-        document.getElementById('totalUtilized').textContent = '₹0';
-        
-        const budgetsList = document.getElementById('budgetsList');
-        budgetsList.innerHTML = '<p>Budget information will be displayed here...</p>';
-        
-        // TODO: Implement actual budget loading
-        showNotification('Budget functionality - To be implemented', 'info');
+        await renderAdminBudgets();
+        document.getElementById('budgetDeptFilter')?.addEventListener('change', renderAdminBudgets);
+        document.getElementById('budgetYearFilter')?.addEventListener('change', renderAdminBudgets);
     } catch (error) {
         console.error('Error loading budgets:', error);
+    }
+}
+
+async function renderAdminBudgets() {
+    const deptId = document.getElementById('budgetDeptFilter')?.value;
+    const year = document.getElementById('budgetYearFilter')?.value;
+    const list = document.getElementById('budgetsList');
+    list.innerHTML = '<p class="t-text-muted">Loading budgets…</p>';
+
+    const setTotals = (req, app, util) => {
+        document.getElementById('totalRequested').textContent = UI.fmtMoney(req);
+        document.getElementById('totalApproved').textContent  = UI.fmtMoney(app);
+        document.getElementById('totalUtilized').textContent  = UI.fmtMoney(util);
+    };
+
+    try {
+        let depts = [];
+        if (deptId) depts = [{ _id: deptId }];
+        else {
+            const r = await api.getDepartments();
+            depts = r.data || [];
+        }
+
+        let req = 0, app = 0, util = 0;
+        const rows = [];
+        for (const d of depts) {
+            const r = await api.getDepartmentBudgets(d._id, year ? { year } : {});
+            const data = r.data;
+            req += data.totals.combined.requested;
+            app += data.totals.combined.approved;
+            util += data.totals.combined.utilized;
+            rows.push(...(data.events || []), ...(data.projects || []));
+        }
+        setTotals(req, app, util);
+
+        if (!rows.length) {
+            list.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-piggy-bank"></i></div><div>No budget requests in this scope.</div></div>`;
+            return;
+        }
+
+        list.innerHTML = `
+            <div class="t-table-wrap">
+              <table class="t-table">
+                <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Requested</th><th>Approved</th><th>Utilized</th></tr></thead>
+                <tbody>
+                  ${rows.map(r => `
+                    <tr>
+                      <td>${UI.escapeHtml(r.title)}</td>
+                      <td><span class="badge badge-neutral">${r.type}</span></td>
+                      <td>${UI.statusBadge(r.status)}</td>
+                      <td>${UI.fmtMoney(r.budget.totalRequested)}</td>
+                      <td style="color:var(--color-success)">${UI.fmtMoney(r.budget.totalApproved)}</td>
+                      <td style="color:var(--color-info)">${UI.fmtMoney(r.budget.totalUtilized)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>`;
+    } catch (e) {
+        list.innerHTML = `<p class="form-error">${UI.escapeHtml(e.message)}</p>`;
     }
 }
 
@@ -528,48 +652,35 @@ async function toggleUserStatus(id, isActive) {
 }
 
 async function resetUserPassword(id) {
-    const newPassword = prompt('Enter new password (minimum 6 characters):');
-    if (newPassword && newPassword.length >= 6) {
-        try {
-            await api.resetUserPassword(id, newPassword);
-            showNotification('Password reset successfully!', 'success');
-        } catch (error) {
-            showNotification('Error resetting password: ' + error.message, 'error');
-        }
-    } else if (newPassword !== null) {
-        showNotification('Password must be at least 6 characters long', 'error');
+    const result = await UI.prompt({
+        title: 'Reset user password',
+        description: 'Enter a new password (minimum 6 characters).',
+        submitText: 'Reset password',
+        fields: [
+            { name: 'password', label: 'New password', type: 'password', minlength: 6, required: true }
+        ]
+    });
+    if (!result) return;
+    const newPassword = result.password;
+    if (!newPassword || newPassword.length < 6) {
+        UI.toast('Password must be at least 6 characters long', 'error');
+        return;
+    }
+    try {
+        await api.resetUserPassword(id, newPassword);
+        UI.toast('Password reset successfully', 'success');
+    } catch (error) {
+        UI.toast('Error resetting password: ' + error.message, 'error');
     }
 }
 
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    const colors = {
-        success: '#48bb78',
-        error: '#f56565',
-        info: '#4299e1'
-    };
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        border-radius: 5px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        background: ${colors[type] || '#718096'};
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+function showNotification(message, type = 'info') {
+    if (window.UI && window.UI.toast) return UI.toast(message, type);
+    const n = document.createElement('div');
+    n.textContent = message;
+    n.style.cssText = 'position:fixed;top:20px;right:20px;padding:1rem;background:#333;color:#fff;border-radius:8px;z-index:99999';
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3000);
 }
 
 function logout() {

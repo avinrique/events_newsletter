@@ -52,21 +52,24 @@ exports.createProject = async (req, res) => {
         // Create the project data
         const projectData = {
             title,
+            description: description || title,           // model requires `description`
             projectCategory,
             studentProjectType: projectType,
             domain,
             abstract: description || title, // Use title as default if no description
             technicalDetails: {
-                technologies: technologies ? technologies.split(',').map(t => t.trim()) : [],
+                technologies: technologies ? (Array.isArray(technologies) ? technologies : technologies.split(',').map(t => t.trim())) : [],
                 githubUrl: githubUrl || null,
                 liveUrl: liveUrl || null,
                 driveLink: driveLink || null,
                 youtubeLink: youtubeLink || null,
                 documentationUrl: documentationUrl || null
             },
-            startDate: startDate || new Date(),
-            expectedEndDate: endDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-            status: projectStatus,
+            timeline: {                                   // model requires `timeline.startDate`
+                startDate: startDate ? new Date(startDate) : new Date(),
+                expectedEndDate: endDate ? new Date(endDate) : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+            },
+            approvalStatus: projectStatus,                // model uses `approvalStatus`
             department: req.user.department,
             createdBy: req.user.id,
             uploadedBy: req.user.id
@@ -183,6 +186,15 @@ exports.createProject = async (req, res) => {
 
     } catch (error) {
         console.error('Error creating project:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: Object.values(error.errors).map(e => ({
+                    msg: e.message, path: e.path, type: 'field'
+                }))
+            });
+        }
         res.status(500).json({
             success: false,
             message: 'Error creating project',
@@ -232,12 +244,24 @@ exports.getMyProjects = async (req, res) => {
             }
         } else {
             // Default behavior - user's own projects
-            query = {
-                $or: [
-                    { createdBy: req.user.id },
-                    { 'teamMembers.user': req.user.id }
-                ]
-            };
+            // Teachers/HOD also see projects they mentor.
+            if (req.user.role === 'teacher' || req.user.role === 'hod') {
+                query = {
+                    $or: [
+                        { createdBy: req.user.id },
+                        { 'teamMembers.user': req.user.id },
+                        { primaryMentor: req.user.id },
+                        { coMentors: req.user.id }
+                    ]
+                };
+            } else {
+                query = {
+                    $or: [
+                        { createdBy: req.user.id },
+                        { 'teamMembers.user': req.user.id }
+                    ]
+                };
+            }
         }
         
         // Find projects based on the query

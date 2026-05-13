@@ -73,7 +73,7 @@ async function createTestData() {
         // 5. Create HOD
         console.log('Creating HOD...');
         const hod = await User.create({
-            name: 'Dr. Rajesh Kumar',
+            name: 'Dr. Suresh Iyer',
             email: 'hod.ise@college.edu',
             password: 'password123',
             role: 'teacher',
@@ -103,6 +103,16 @@ async function createTestData() {
             department: iseDept._id,
             designation: asstProfDesignation._id,
             contactNumber: '9876543212'
+        });
+
+        const teacher3 = await User.create({
+            name: 'Prof. Rajesh Kumar',
+            email: 'rajesh.kumar@college.edu',
+            password: 'password123',
+            role: 'teacher',
+            department: iseDept._id,
+            designation: profDesignation._id,
+            contactNumber: '9876543213'
         });
 
         // 7. Create Students
@@ -293,11 +303,12 @@ async function createTestData() {
         console.log('HOD: hod.ise@college.edu / password123');
         console.log('Teacher 1: priya.sharma@college.edu / password123');
         console.log('Teacher 2: arjun.patel@college.edu / password123');
+        console.log('Teacher 3: rajesh.kumar@college.edu / password123');
         console.log('Sample Student: 1ise20001@student.college.edu / password123');
         
         console.log('\n📊 Data Summary:');
         console.log(`- Department: ${iseDept.name} (${iseDept.code})`);
-        console.log(`- Users: 1 SuperAdmin, 1 Admin, 1 HOD, 2 Teachers, 10 Students`);
+        console.log(`- Users: 1 SuperAdmin, 1 Admin, 1 HOD, 3 Teachers, 10 Students`);
         console.log(`- Projects: 6 projects (1 Major, 2 Mini, 3 Personal)`);
         console.log(`- Project Status: 2 Approved, 2 Pending Approval, 1 In Progress, 1 Completed`);
         

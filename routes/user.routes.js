@@ -21,7 +21,8 @@ router.post('/', authorize('superadmin', 'admin'), [
 router.get('/', authorize('superadmin', 'admin', 'hod', 'teacher'), userController.getUsers);
 
 // Get all teachers from institution (for proctor/class teacher selection)
-router.get('/teachers/department', authorize('student'), userController.getDepartmentTeachers);
+router.get('/teachers/department', authorize('student', 'hod', 'admin', 'teacher'), userController.getDepartmentTeachers);
+router.get('/department/teachers',  authorize('hod', 'admin', 'teacher'), userController.getDepartmentTeachers);
 
 // Get all students for teachers (includes relationships)
 router.get('/students/all', authorize('teacher'), userController.getAllStudentsForTeacher);

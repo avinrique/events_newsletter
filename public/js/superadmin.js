@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         currentUser = response.data;
         
         if (currentUser.role !== 'superadmin') {
-            alert('Access denied. SuperAdmin privileges required.');
+            UI.toast('Access denied. SuperAdmin privileges required.', 'error');
             window.location.href = '/';
             return;
         }
@@ -365,163 +365,173 @@ async function editDepartment(id) {
     try {
         const response = await api.getDepartment(id);
         const dept = response.data;
-        
-        const name = prompt('Edit Department Name:', dept.name);
-        const code = prompt('Edit Department Code:', dept.code);
-        const description = prompt('Edit Description:', dept.description || '');
-        
-        if (name && code) {
+
+        const result = await UI.prompt({
+            title: 'Edit Department',
+            submitText: 'Save changes',
+            fields: [
+                { name: 'name', label: 'Name', value: dept.name, required: true },
+                { name: 'code', label: 'Code', value: dept.code, required: true, hint: 'Will be upper-cased' },
+                { name: 'description', label: 'Description', type: 'textarea', value: dept.description || '' }
+            ]
+        });
+        if (!result) return;
+
+        if (result.name && result.code) {
             await api.updateDepartment(id, {
-                name: name.trim(),
-                code: code.trim().toUpperCase(),
-                description: description.trim()
+                name: result.name.trim(),
+                code: result.code.trim().toUpperCase(),
+                description: (result.description || '').trim()
             });
-            
             loadDepartments();
             loadDashboardStats();
-            showNotification('Department updated successfully!', 'success');
+            UI.toast('Department updated successfully', 'success');
         }
     } catch (error) {
-        showNotification('Error updating department: ' + error.message, 'error');
+        UI.toast('Error updating department: ' + error.message, 'error');
     }
 }
 
 async function deleteDepartment(id) {
-    if (confirm('Are you sure you want to deactivate this department? You can reactivate it later.')) {
-        try {
-            await api.deleteDepartment(id);
-            loadDepartments();
-            loadDashboardStats();
-            showNotification('Department deactivated successfully!', 'success');
-        } catch (error) {
-            showNotification('Error deactivating department: ' + error.message, 'error');
-        }
+    const ok = await UI.confirm({
+        title: 'Deactivate department?',
+        message: 'You can reactivate it later from this same screen.',
+        confirmText: 'Deactivate',
+        danger: true
+    });
+    if (!ok) return;
+    try {
+        await api.deleteDepartment(id);
+        loadDepartments();
+        loadDashboardStats();
+        UI.toast('Department deactivated', 'success');
+    } catch (error) {
+        UI.toast('Error deactivating department: ' + error.message, 'error');
     }
 }
 
 async function reactivateDepartment(id) {
-    if (confirm('Are you sure you want to reactivate this department?')) {
-        try {
-            await api.reactivateDepartment(id);
-            loadDepartments();
-            loadDashboardStats();
-            showNotification('Department reactivated successfully!', 'success');
-        } catch (error) {
-            showNotification('Error reactivating department: ' + error.message, 'error');
-        }
+    const ok = await UI.confirm({ title: 'Reactivate department?', confirmText: 'Reactivate' });
+    if (!ok) return;
+    try {
+        await api.reactivateDepartment(id);
+        loadDepartments();
+        loadDashboardStats();
+        UI.toast('Department reactivated', 'success');
+    } catch (error) {
+        UI.toast('Error reactivating department: ' + error.message, 'error');
     }
 }
 
 async function editDesignation(id) {
     try {
-        // First get the designation details
         const designations = await api.getDesignations();
         const designation = designations.data.find(d => d._id === id);
-        
+
         if (!designation) {
-            showNotification('Designation not found', 'error');
+            UI.toast('Designation not found', 'error');
             return;
         }
-        
-        const name = prompt('Edit Designation Name:', designation.name);
-        const level = prompt('Edit Level (1-10):', designation.level);
-        const description = prompt('Edit Description:', designation.description || '');
-        
-        if (name && level && !isNaN(level)) {
+
+        const result = await UI.prompt({
+            title: 'Edit Designation',
+            submitText: 'Save changes',
+            fields: [
+                { name: 'name', label: 'Name', value: designation.name, required: true },
+                { name: 'level', label: 'Level (1–5)', type: 'number', value: designation.level, min: 1, max: 5, required: true },
+                { name: 'description', label: 'Description', type: 'textarea', value: designation.description || '' }
+            ]
+        });
+        if (!result) return;
+
+        if (result.name && result.level && !isNaN(result.level)) {
             await api.updateDesignation(id, {
-                name: name.trim(),
-                level: parseInt(level),
-                description: description.trim()
+                name: result.name.trim(),
+                level: parseInt(result.level),
+                description: (result.description || '').trim()
             });
-            
             loadDesignations();
             loadDashboardStats();
-            showNotification('Designation updated successfully!', 'success');
+            UI.toast('Designation updated successfully', 'success');
         }
     } catch (error) {
-        showNotification('Error updating designation: ' + error.message, 'error');
+        UI.toast('Error updating designation: ' + error.message, 'error');
     }
 }
 
 async function deleteDesignation(id) {
-    if (confirm('Are you sure you want to deactivate this designation? You can reactivate it later.')) {
-        try {
-            await api.deleteDesignation(id);
-            loadDesignations();
-            loadDashboardStats();
-            showNotification('Designation deactivated successfully!', 'success');
-        } catch (error) {
-            showNotification('Error deactivating designation: ' + error.message, 'error');
-        }
+    const ok = await UI.confirm({ title: 'Deactivate designation?', message: 'You can reactivate it later.', confirmText: 'Deactivate', danger: true });
+    if (!ok) return;
+    try {
+        await api.deleteDesignation(id);
+        loadDesignations();
+        loadDashboardStats();
+        UI.toast('Designation deactivated', 'success');
+    } catch (error) {
+        UI.toast('Error deactivating designation: ' + error.message, 'error');
     }
 }
 
 async function reactivateDesignation(id) {
-    if (confirm('Are you sure you want to reactivate this designation?')) {
-        try {
-            await api.updateDesignation(id, { isActive: true });
-            loadDesignations();
-            loadDashboardStats();
-            showNotification('Designation reactivated successfully!', 'success');
-        } catch (error) {
-            showNotification('Error reactivating designation: ' + error.message, 'error');
-        }
+    const ok = await UI.confirm({ title: 'Reactivate designation?', confirmText: 'Reactivate' });
+    if (!ok) return;
+    try {
+        await api.updateDesignation(id, { isActive: true });
+        loadDesignations();
+        loadDashboardStats();
+        UI.toast('Designation reactivated', 'success');
+    } catch (error) {
+        UI.toast('Error reactivating designation: ' + error.message, 'error');
     }
 }
 
 async function toggleAdminStatus(id, isActive) {
-    if (confirm(`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this admin?`)) {
-        try {
-            await api.toggleUserStatus(id);
-            loadAdmins();
-            loadDashboardStats();
-            showNotification(`Admin ${isActive ? 'deactivated' : 'activated'} successfully!`, 'success');
-        } catch (error) {
-            showNotification('Error updating admin status: ' + error.message, 'error');
-        }
+    const ok = await UI.confirm({
+        title: `${isActive ? 'Deactivate' : 'Activate'} this admin?`,
+        confirmText: isActive ? 'Deactivate' : 'Activate',
+        danger: isActive
+    });
+    if (!ok) return;
+    try {
+        await api.toggleUserStatus(id);
+        loadAdmins();
+        loadDashboardStats();
+        UI.toast(`Admin ${isActive ? 'deactivated' : 'activated'}`, 'success');
+    } catch (error) {
+        UI.toast('Error updating admin status: ' + error.message, 'error');
     }
 }
 
 async function resetAdminPassword(id) {
-    if (confirm('Are you sure you want to reset this admin\'s password?')) {
-        const newPassword = prompt('Enter new password:');
-        if (newPassword && newPassword.length >= 6) {
-            try {
-                await api.resetUserPassword(id, newPassword);
-                showNotification('Admin password reset successfully!', 'success');
-            } catch (error) {
-                showNotification('Error resetting password: ' + error.message, 'error');
-            }
-        } else if (newPassword) {
-            showNotification('Password must be at least 6 characters long', 'error');
-        }
+    const result = await UI.prompt({
+        title: 'Reset admin password',
+        description: 'Enter a new password (minimum 6 characters).',
+        submitText: 'Reset password',
+        fields: [
+            { name: 'password', label: 'New password', type: 'password', minlength: 6, required: true }
+        ]
+    });
+    if (!result) return;
+    const newPassword = result.password;
+    if (!newPassword || newPassword.length < 6) {
+        UI.toast('Password must be at least 6 characters long', 'error');
+        return;
+    }
+    try {
+        await api.resetUserPassword(id, newPassword);
+        UI.toast('Admin password reset', 'success');
+    } catch (error) {
+        UI.toast('Error resetting password: ' + error.message, 'error');
     }
 }
 
-function showNotification(message, type) {
-    // Simple notification system
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        border-radius: 5px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        background: ${type === 'success' ? '#48bb78' : '#f56565'};
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+function showNotification(message, type = 'info') {
+    if (window.UI && window.UI.toast) return UI.toast(message, type);
+    const n = document.createElement('div');
+    n.textContent = message;
+    n.style.cssText = 'position:fixed;top:20px;right:20px;padding:1rem;background:#333;color:#fff;border-radius:8px;z-index:99999';
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3000);
 }
 
 function logout() {

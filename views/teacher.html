@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Department Management System</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/theme.css">
     <link rel="stylesheet" href="/css/teacher.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -140,13 +141,30 @@
             <section id="events" class="content-section">
                 <div class="section-header">
                     <h2>My Events</h2>
-                    <button class="btn btn-primary" id="createEventBtn">
-                        <i class="fas fa-plus"></i> Create New Event
-                    </button>
+                    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                        <button class="btn btn-secondary" id="createEventBtn">
+                            <i class="fas fa-file-alt"></i> Documentation Event
+                        </button>
+                        <button class="btn btn-primary" id="createCollegeEventBtn">
+                            <i class="fas fa-calendar-plus"></i> Create College Event
+                        </button>
+                    </div>
                 </div>
 
-                <div class="events-list" id="eventsList">
-                    <p>Loading events...</p>
+                <div class="tab-bar">
+                    <button class="tab-btn active" data-events-tab="college">College Events</button>
+                    <button class="tab-btn" data-events-tab="documentation">Documentation Events</button>
+                </div>
+
+                <div id="collegeEventsTab" class="tab-content active">
+                    <div id="collegeEventsList" class="t-stack">
+                        <p class="t-text-muted">Loading college events…</p>
+                    </div>
+                </div>
+                <div id="documentationEventsTab" class="tab-content">
+                    <div class="events-list" id="eventsList">
+                        <p class="t-text-muted">Loading documentation events…</p>
+                    </div>
                 </div>
             </section>
 
@@ -1260,7 +1278,89 @@
         </div>
     </div>
 
+    <!-- Create College Event modal -->
+    <div id="collegeEventModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Create College Event</h3>
+                <button class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="collegeEventForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Title <span class="required">*</span></label>
+                            <input class="form-control" type="text" name="title" required maxlength="200" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Venue <span class="required">*</span></label>
+                            <input class="form-control" type="text" name="venue" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description <span class="required">*</span></label>
+                        <textarea class="form-control" name="description" required maxlength="2000"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Event type <span class="required">*</span></label>
+                            <select class="form-control" name="eventType" required>
+                                <option value="personal-teacher-event">Personal Teacher Event</option>
+                                <option value="joint-teacher-event">Joint Teacher Event</option>
+                                <option value="club-event">Club Event</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category <span class="required">*</span></label>
+                            <select class="form-control" name="eventCategory" required>
+                                <option value="academic">Academic</option>
+                                <option value="cultural">Cultural</option>
+                                <option value="technical" selected>Technical</option>
+                                <option value="sports">Sports</option>
+                                <option value="social">Social</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="seminar">Seminar</option>
+                                <option value="competition">Competition</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date <span class="required">*</span></label>
+                            <input class="form-control" type="date" name="eventDate" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Start time <span class="required">*</span></label>
+                            <input class="form-control" type="time" name="startTime" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">End time <span class="required">*</span></label>
+                            <input class="form-control" type="time" name="endTime" required />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Expected participants</label>
+                            <input class="form-control" type="number" min="1" name="expectedParticipants" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Budget request (₹)</label>
+                            <input class="form-control" type="number" min="0" step="100" name="totalRequested" />
+                            <small class="form-hint">Sum across all categories.</small>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit for approval</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/ui.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/teacher.js"></script>
+    <script src="/js/teacher-events-college.js"></script>
 </body>
 </html>

@@ -55,7 +55,8 @@ router.post('/', [
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('projectType').isIn(['personal', 'mini', 'major']).withMessage('Invalid project type'),
     body('domain').trim().notEmpty().withMessage('Domain is required'),
-    body('description').optional().isLength({ max: 2000 }).withMessage('Description too long')
+    body('description').trim().notEmpty().withMessage('Description is required').isLength({ max: 2000 }).withMessage('Description too long'),
+    body('startDate').optional().isISO8601().withMessage('Valid start date is required')
 ], createProject);
 
 // @route   POST /api/projects/upload

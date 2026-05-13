@@ -15,13 +15,16 @@
 - **Features**: Create HOD/Teacher/Student accounts, view all reports, assign departments
 
 ### 🎓 HOD (Head of Department)
+- **Name**: Dr. Suresh Iyer
 - **Email**: `hod.ise@college.edu`
 - **Password**: `password123`
 - **Department**: Information Science and Engineering (ISE)
 - **Access**: Final approval authority for department
-- **Features**: 
+- **Features**:
   - View all department students and projects
   - Approve/reject clubs and events
+  - Approve / adjust event & project budgets
+  - Compose and publish monthly Newsletters
   - Download teacher reports (PDF/Word)
   - Generate department analytics
   - Teacher event management

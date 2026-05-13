@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         if (!isHOD) {
             console.error('❌ HOD Auth Failed - User does not have HOD privileges');
-            alert(`Access denied. HOD privileges required.\n\nUser details:\nRole: ${currentUser.role}\nPosition: ${currentUser.position}`);
+            UI.toast(`Access denied. HOD privileges required.\n\nUser details:\nRole: ${currentUser.role}\nPosition: ${currentUser.position}`, 'error');
             window.location.href = '/';
             return;
         }
@@ -317,6 +317,9 @@ function handleNavigation(e) {
             break;
         case 'reports':
             loadReports();
+            break;
+        case 'newsletter':
+            loadNewsletters();
             break;
     }
 }
@@ -748,12 +751,71 @@ async function loadEvents() {
 
 // Budget Management
 async function loadBudgets() {
-    // TODO: Implement budget loading
-    document.getElementById('totalRequested').textContent = '₹0';
-    document.getElementById('totalApproved').textContent = '₹0';
-    document.getElementById('totalUtilized').textContent = '₹0';
-    
-    document.getElementById('budgetsList').innerHTML = '<p>Budget management functionality - To be implemented</p>';
+    const deptId = currentUser?.department?._id || currentUser?.department;
+    const listEl = document.getElementById('budgetsList');
+    if (!deptId) { listEl.innerHTML = '<p class="form-error">No department on user.</p>'; return; }
+
+    const elTotR = document.getElementById('totalRequested');
+    const elTotA = document.getElementById('totalApproved');
+    const elTotU = document.getElementById('totalUtilized');
+    listEl.innerHTML = '<p class="t-text-muted">Loading budgets…</p>';
+
+    try {
+        const res = await api.getDepartmentBudgets(deptId);
+        const d = res.data || {};
+        const t = d.totals?.combined || { requested: 0, approved: 0, utilized: 0 };
+        if (elTotR) elTotR.textContent = UI.fmtMoney(t.requested);
+        if (elTotA) elTotA.textContent = UI.fmtMoney(t.approved);
+        if (elTotU) elTotU.textContent = UI.fmtMoney(t.utilized);
+
+        const rows = [...(d.events || []), ...(d.projects || [])];
+        if (!rows.length) {
+            listEl.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-piggy-bank"></i></div><div class="empty-title">No budget requests yet</div><div>Approved events &amp; projects with budgets will appear here.</div></div>`;
+            return;
+        }
+        listEl.innerHTML = rows.map(r => `
+            <div class="data-card">
+                <div class="card-header">
+                    <div>
+                        <h4 class="card-title">${UI.escapeHtml(r.title)} <span class="badge badge-neutral">${r.type}</span></h4>
+                        <p class="card-subtitle">Status: ${UI.statusBadge(r.status)} · By ${UI.escapeHtml(r.creator?.name || 'Unknown')}</p>
+                    </div>
+                    ${r.type === 'event' ? `<button class="btn btn-sm btn-secondary" data-budget-adjust="${r._id}"><i class="fas fa-pen"></i> Adjust</button>` : ''}
+                </div>
+                <div class="t-grid t-grid-3" style="margin-top:.75rem;">
+                    <div><div class="t-text-muted" style="font-size:.75rem">REQUESTED</div><strong>${UI.fmtMoney(r.budget.totalRequested)}</strong></div>
+                    <div><div class="t-text-muted" style="font-size:.75rem">APPROVED</div><strong style="color:var(--color-success)">${UI.fmtMoney(r.budget.totalApproved)}</strong></div>
+                    <div><div class="t-text-muted" style="font-size:.75rem">UTILIZED</div><strong style="color:var(--color-info)">${UI.fmtMoney(r.budget.totalUtilized)}</strong></div>
+                </div>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('[data-budget-adjust]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.budgetAdjust;
+                const target = rows.find(x => x._id === id);
+                const res = await UI.prompt({
+                    title: 'Adjust event budget',
+                    description: 'Set the approved budget for this event.',
+                    submitText: 'Save',
+                    fields: [
+                        { name: 'totalApproved', label: 'Approved (₹)', type: 'number', min: 0, value: target?.budget?.totalApproved ?? 0, required: true }
+                    ]
+                });
+                if (!res) return;
+                try {
+                    await api.updateEventBudget(id, { totalApproved: Number(res.totalApproved) });
+                    UI.toast('Budget updated', 'success');
+                    loadBudgets();
+                } catch (err) {
+                    UI.toast('Failed to update budget: ' + err.message, 'error');
+                }
+            });
+        });
+    } catch (e) {
+        console.error('budgets load failed', e);
+        listEl.innerHTML = `<p class="form-error">Failed to load budgets: ${UI.escapeHtml(e.message)}</p>`;
+    }
 }
 
 // Project Management
@@ -870,7 +932,7 @@ async function loadProjects() {
 function viewProject(projectId) {
     // TODO: Implement project view modal or redirect to project details
     console.log('Viewing project:', projectId);
-    alert(`Project viewing feature to be implemented. Project ID: ${projectId}`);
+    UI.toast(`Project viewing feature to be implemented. Project ID: ${projectId}`, 'info');
 }
 
 async function approveProject(projectId) {
@@ -882,35 +944,41 @@ async function approveProject(projectId) {
         const response = await api.approveProject(projectId);
 
         if (response.success) {
-            alert('Project approved successfully!');
+            UI.toast('Project approved successfully!', 'success');
             loadProjects(); // Reload the projects list
         } else {
-            alert('Failed to approve project: ' + (response.message || 'Unknown error'));
+            UI.toast('Failed to approve project: ' + (response.message || 'Unknown error', 'error'));
         }
     } catch (error) {
         console.error('Error approving project:', error);
-        alert('Error approving project: ' + error.message);
+        UI.toast('Error approving project: ' + error.message, 'error');
     }
 }
 
 async function rejectProject(projectId) {
     try {
-        const reason = prompt('Please provide a reason for rejection:');
-        if (!reason) {
-            return; // User cancelled
-        }
+        const result = await UI.prompt({
+            title: 'Reject project',
+            description: 'Please provide a brief reason for rejection so the student/teacher can address it.',
+            submitText: 'Reject project',
+            fields: [
+                { name: 'reason', label: 'Rejection reason', type: 'textarea', required: true }
+            ]
+        });
+        if (!result || !result.reason) return;
+        const reason = result.reason;
 
         const response = await api.rejectProject(projectId, reason);
 
         if (response.success) {
-            alert('Project rejected successfully!');
+            UI.toast('Project rejected successfully!', 'success');
             loadProjects(); // Reload the projects list
         } else {
-            alert('Failed to reject project: ' + (response.message || 'Unknown error'));
+            UI.toast('Failed to reject project: ' + (response.message || 'Unknown error', 'error'));
         }
     } catch (error) {
         console.error('Error rejecting project:', error);
-        alert('Error rejecting project: ' + error.message);
+        UI.toast('Error rejecting project: ' + error.message, 'error');
     }
 }
 
@@ -1007,7 +1075,7 @@ async function generateReport() {
         if (reportType === 'individual') {
             const teacherId = document.getElementById('selectedTeacher').value;
             if (!teacherId) {
-                alert('Please select a teacher for individual report');
+                UI.toast('Please select a teacher for individual report', 'warning');
                 return;
             }
             await generateIndividualTeacherReport(teacherId, params);
@@ -1718,7 +1786,7 @@ async function handleReject() {
     const comments = document.getElementById('approvalComments').value;
     
     if (!comments.trim()) {
-        alert('Please provide a reason for rejection.');
+        UI.toast('Please provide a reason for rejection.', 'warning');
         return;
     }
     
@@ -1752,7 +1820,7 @@ async function viewItemDetails(id, type) {
         }
         
         if (!item) {
-            alert('Item not found');
+            UI.toast('Item not found', 'info');
             return;
         }
         
@@ -1761,10 +1829,10 @@ async function viewItemDetails(id, type) {
             ? `Club: ${item.name}\nDescription: ${item.description}\nMentor: ${item.mentor?.name || 'N/A'}\nStatus: ${item.status}\nCreated: ${new Date(item.createdAt).toLocaleDateString()}`
             : `Event: ${item.title}\nDescription: ${item.description}\nType: ${item.type}\nDate: ${new Date(item.eventDate).toLocaleDateString()}\nBudget: ₹${item.budget?.toLocaleString() || 'N/A'}\nOrganizer: ${item.organizer?.name || 'N/A'}\nStatus: ${item.status}`;
             
-        alert(details);
+        UI.toast(details, 'info');
     } catch (error) {
         console.error('Error loading item details:', error);
-        alert('Error loading details');
+        UI.toast('Error loading details', 'error');
     }
 }
 
@@ -2716,35 +2784,13 @@ Click OK to proceed with deletion.`;
     }
 }
 
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    const colors = {
-        success: '#48bb78',
-        error: '#f56565',
-        info: '#4299e1'
-    };
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        border-radius: 5px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        background: ${colors[type] || '#718096'};
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+function showNotification(message, type = 'info') {
+    if (window.UI && window.UI.toast) return UI.toast(message, type);
+    const n = document.createElement('div');
+    n.textContent = message;
+    n.style.cssText = 'position:fixed;top:20px;right:20px;padding:1rem;background:#333;color:#fff;border-radius:8px;z-index:99999';
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3000);
 }
 
 function logout() {
@@ -3205,3 +3251,135 @@ function hideLetterCreation() {
     // Clear dynamic fields
     document.getElementById("dynamicFields").innerHTML = "";
 }
+
+/* ---------------- Newsletter management ---------------- */
+
+async function loadNewsletters() {
+    const list = document.getElementById('newslettersList');
+    if (!list) return;
+    list.innerHTML = '<p class="t-text-muted">Loading newsletters…</p>';
+    try {
+        const res = await api.getNewsletters();
+        const items = res.data || [];
+        if (!items.length) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-newspaper"></i></div>
+                    <div class="empty-title">No newsletters yet</div>
+                    <div>Click <strong>New Newsletter</strong> to compose one for this department.</div>
+                </div>`;
+            return;
+        }
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        list.innerHTML = items.map(n => `
+            <div class="data-card">
+                <div class="card-header">
+                    <div>
+                        <h4 class="card-title">${UI.escapeHtml(n.title)}</h4>
+                        <p class="card-subtitle">${months[n.month]} ${n.year} · ${UI.escapeHtml(n.department?.name || '')}</p>
+                    </div>
+                    <div>${UI.statusBadge(n.status)}</div>
+                </div>
+                ${n.summary ? `<p>${UI.escapeHtml(n.summary)}</p>` : ''}
+                ${n.sections?.length ? `<p class="t-text-muted" style="font-size:.85rem">${n.sections.length} section${n.sections.length === 1 ? '' : 's'}</p>` : ''}
+                <div class="card-actions">
+                    ${n.status === 'draft'
+                        ? `<button class="btn btn-secondary btn-sm" data-newsletter-edit="${n._id}"><i class="fas fa-pen"></i> Edit</button>
+                           <button class="btn btn-primary btn-sm" data-newsletter-publish="${n._id}"><i class="fas fa-paper-plane"></i> Publish</button>`
+                        : `<a href="/newsletter?dept=${n.department._id}&month=${n.month}&year=${n.year}" target="_blank" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> View public</a>`}
+                    <button class="btn btn-ghost btn-sm" data-newsletter-delete="${n._id}"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+        bindNewsletterButtons(list);
+    } catch (e) {
+        list.innerHTML = `<p class="form-error">${UI.escapeHtml(e.message)}</p>`;
+    }
+}
+
+function bindNewsletterButtons(root) {
+    root.querySelectorAll('[data-newsletter-edit]').forEach(b => b.addEventListener('click', () => openNewsletterEditor(b.dataset.newsletterEdit)));
+    root.querySelectorAll('[data-newsletter-publish]').forEach(b => b.addEventListener('click', async () => {
+        const ok = await UI.confirm({ title: 'Publish newsletter?', message: 'Once published it becomes visible on the public page and can no longer be edited.', confirmText: 'Publish' });
+        if (!ok) return;
+        try {
+            await api.publishNewsletter(b.dataset.newsletterPublish);
+            UI.toast('Newsletter published', 'success');
+            loadNewsletters();
+        } catch (e) { UI.toast('Failed: ' + e.message, 'error'); }
+    }));
+    root.querySelectorAll('[data-newsletter-delete]').forEach(b => b.addEventListener('click', async () => {
+        const ok = await UI.confirm({ title: 'Delete newsletter?', confirmText: 'Delete', danger: true });
+        if (!ok) return;
+        try { await api.deleteNewsletter(b.dataset.newsletterDelete); UI.toast('Deleted', 'success'); loadNewsletters(); }
+        catch (e) { UI.toast('Failed: ' + e.message, 'error'); }
+    }));
+}
+
+async function openNewsletterEditor(id) {
+    let n;
+    try {
+        const res = await api.getNewsletter(id);
+        n = res.data;
+    } catch (e) { UI.toast('Failed to load: ' + e.message, 'error'); return; }
+
+    const sectionsJson = JSON.stringify(n.sections || [], null, 2);
+    const result = await UI.prompt({
+        title: 'Edit Newsletter',
+        description: `${n.department?.name || ''} — ${new Date(n.year, n.month, 1).toLocaleString('default', { month:'long', year:'numeric' })}`,
+        submitText: 'Save draft',
+        fields: [
+            { name: 'title',    label: 'Title', value: n.title, required: true },
+            { name: 'summary',  label: 'Summary', type: 'textarea', value: n.summary || '' },
+            { name: 'sections', label: 'Sections (JSON)', type: 'textarea', value: sectionsJson, hint: 'Array of {heading, body, order}. JSON.' }
+        ]
+    });
+    if (!result) return;
+    let sections = [];
+    try { sections = JSON.parse(result.sections || '[]'); }
+    catch (e) { UI.toast('Sections is not valid JSON', 'error'); return; }
+    try {
+        await api.updateNewsletter(id, {
+            title: result.title.trim(),
+            summary: (result.summary || '').trim(),
+            sections
+        });
+        UI.toast('Saved', 'success');
+        loadNewsletters();
+    } catch (e) {
+        UI.toast('Save failed: ' + e.message, 'error');
+    }
+}
+
+async function openCreateNewsletter() {
+    const now = new Date();
+    const result = await UI.prompt({
+        title: 'New Newsletter',
+        submitText: 'Create draft',
+        fields: [
+            { name: 'title', label: 'Title', placeholder: 'e.g. ISE Newsletter — May 2026', required: true },
+            { name: 'month', label: 'Month (0–11)', type: 'number', value: now.getMonth(), min: 0, max: 11, required: true },
+            { name: 'year', label: 'Year', type: 'number', value: now.getFullYear(), min: 2020, max: 2040, required: true },
+            { name: 'summary', label: 'Summary', type: 'textarea' }
+        ]
+    });
+    if (!result) return;
+    try {
+        await api.createNewsletter({
+            title: result.title.trim(),
+            month: Number(result.month),
+            year: Number(result.year),
+            summary: (result.summary || '').trim(),
+            sections: []
+        });
+        UI.toast('Newsletter draft created', 'success');
+        loadNewsletters();
+    } catch (e) {
+        UI.toast('Create failed: ' + e.message, 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('createNewsletterBtn');
+    if (btn) btn.addEventListener('click', openCreateNewsletter);
+});

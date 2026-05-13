@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOD Dashboard - Department Management System</title>
+    <link rel="stylesheet" href="/css/theme.css">
     <link rel="stylesheet" href="/css/hod.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -376,6 +377,7 @@
                 <li><a href="#letters" class="nav-link"><i class="fas fa-envelope"></i> Letter Writing</a></li>
                 <li><a href="#budgets" class="nav-link"><i class="fas fa-money-bill-wave"></i> Budget Approvals</a></li>
                 <li><a href="#reports" class="nav-link"><i class="fas fa-chart-bar"></i> Department Reports</a></li>
+                <li><a href="#newsletter" class="nav-link"><i class="fas fa-newspaper"></i> Newsletter</a></li>
             </ul>
         </nav>
 
@@ -677,6 +679,19 @@
                 </div>
                 <div id="studentsList" class="data-grid">
                     <!-- Students will load here -->
+                </div>
+            </section>
+
+            <!-- Newsletter Section -->
+            <section id="newsletterSection" class="section">
+                <div class="section-header">
+                    <h2>Newsletter Management</h2>
+                    <button class="btn btn-primary" id="createNewsletterBtn">
+                        <i class="fas fa-plus"></i> New Newsletter
+                    </button>
+                </div>
+                <div id="newslettersList" class="t-stack">
+                    <p class="t-text-muted">Loading newsletters…</p>
                 </div>
             </section>
 
@@ -1131,6 +1146,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="/js/ui.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/teacher.js"></script>
     <script src="/js/hod.js"></script>

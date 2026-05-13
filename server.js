@@ -8,9 +8,12 @@ require('dotenv').config();
 
 const app = express();
 
-// Database connection
+// Database connection — the test suite manages its own in-memory MongoDB,
+// so skip this call under NODE_ENV=test.
 const connectDB = require('./config/database');
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+    connectDB();
+}
 
 // Middleware
 app.use(helmet({
@@ -59,6 +62,7 @@ const teacherEventRoutes = require('./routes/teacherEvents');
 const eventParticipationRoutes = require('./routes/eventParticipation.routes');
 const reportRoutes = require('./routes/report.routes');
 const newsletterRoutes = require('./routes/newsletter.routes');
+const newsletterApiRoutes = require('./routes/newsletterApi.routes');
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -73,8 +77,9 @@ app.use('/api/internships', internshipRoutes);
 app.use('/api/teacher-events', teacherEventRoutes);
 app.use('/api/event-participations', eventParticipationRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/newsletters', newsletterApiRoutes);
 
-// Newsletter routes (public)
+// Newsletter HTML page + legacy public APIs
 app.use('/newsletter', newsletterRoutes);
 
 // Serve HTML pages
@@ -120,7 +125,7 @@ app.use((req, res) => {
         message: 'Route not found'
     });
 });
-const PORT = 3007;
+const PORT = process.env.PORT || 3000;
 
 // Only start server if not in test environment
 if (process.env.NODE_ENV !== 'test') {

@@ -53,7 +53,7 @@ async function handleFormSubmit(e) {
     const year = parseInt(document.getElementById('year').value);
     
     if (!departmentId || month === '' || !year) {
-        alert('Please select all fields');
+        UI.toast('Please select all fields', 'warning');
         return;
     }
     
@@ -66,7 +66,7 @@ async function handleFormSubmit(e) {
         await generateNewsletter(departmentId, month, year);
     } catch (error) {
         console.error('Error generating newsletter:', error);
-        alert('Failed to generate newsletter. Please try again.');
+        UI.toast('Failed to generate newsletter. Please try again.', 'error');
     } finally {
         document.getElementById('loadingSpinner').style.display = 'none';
     }
@@ -343,7 +343,7 @@ function generateTeacherEventsNewsletter(teacherEvents, departmentName, startDat
 
 function downloadNewsletter() {
     if (!currentNewsletter) {
-        alert('No newsletter to download');
+        UI.toast('No newsletter to download', 'info');
         return;
     }
     
@@ -360,7 +360,7 @@ function downloadNewsletter() {
 
 function shareNewsletter() {
     if (!currentNewsletter) {
-        alert('No newsletter to share');
+        UI.toast('No newsletter to share', 'info');
         return;
     }
     
@@ -375,7 +375,7 @@ function shareNewsletter() {
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(url).then(() => {
-            alert('Newsletter link copied to clipboard!');
+            UI.toast('Newsletter link copied to clipboard!', 'info');
         });
     }
 }

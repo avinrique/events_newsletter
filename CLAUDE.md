@@ -53,7 +53,7 @@ NODE_ENV=development
 | Role | Primary Functions | Restrictions |
 |------|------------------|-------------|
 | **SuperAdmin** | • Create departments & teacher designations<br>• Create admin accounts | Cannot manage clubs, events, or create other user types |
-| **Admin** | • Create all user types (HOD/Teacher/Student)<br>• Assign departments & designations<br>• View all reports (read-only) | Cannot create clubs or approve events |
+| **Admin** | • Create Teacher and Student accounts<br>• Promote an existing Teacher to HOD via "Assign HOD"<br>• Assign departments & designations<br>• View all reports & budgets (read-only) | Cannot create clubs or approve events |
 | **HOD** | • Final approval for clubs, events, budgets<br>• Generate department reports<br>• Department-scoped authority | Limited to assigned department |
 | **Teacher** | • Create clubs & events (3 types)<br>• Manage projects & certificates<br>• Mentor students<br>• View all students, edit assigned ones | Requires HOD approval for clubs/events |
 | **Student** | • Upload achievements (projects, certificates, internships)<br>• Join clubs & participate in events | Submissions require teacher approval |
@@ -80,7 +80,7 @@ NODE_ENV=development
 ### Critical Business Rules
 
 1. **SuperAdmin** can ONLY create departments, designations, and admins
-2. **Admin** can ONLY create users (HOD/Teacher/Student) and view reports
+2. **Admin** creates Teacher/Student directly, and promotes a Teacher to HOD via `POST /api/users/assign-hod` (Admin cannot POST a user with `role: "hod"`)
 3. **HOD** is the final authority for ALL approvals within their department
 4. **Teachers** can upload achievements for students (auto-approved)
 5. **Club events** require BOTH mentor AND HOD approval

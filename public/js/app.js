@@ -108,9 +108,9 @@ async function handleCreateUser(e) {
         await api.createUser(userData);
         closeCreateUserForm();
         loadUsers();
-        alert('User created successfully!');
+        UI.toast('User created successfully!', 'success');
     } catch (error) {
-        alert('Error creating user: ' + error.message);
+        UI.toast('Error creating user: ' + error.message, 'error');
     }
 }
 
@@ -161,41 +161,16 @@ function showDepartments() {
     loadDepartments();
 }
 
-function showDesignations() {
-    alert('Designations management - To be implemented');
-    // This should show designation management interface
-}
-
-function showAdmins() {
-    alert('Admin management - To be implemented');
-    // This should show admin user creation interface (SuperAdmin can only create Admins)
-}
-
-function showClubs() {
-    alert('Clubs section - To be implemented');
-}
-
-function showEvents() {
-    alert('Events section - To be implemented');
-}
-
-function showProjects() {
-    alert('Projects section - To be implemented');
-}
-
-function showProfile() {
-    alert('Profile section - To be implemented');
-}
-
-function showReports() {
-    alert('Department Reports - To be implemented');
-    // Admin should see all department reports (read-only)
-}
-
-function showBudgets() {
-    alert('Budget Overview - To be implemented');
-    // Admin should see all approved budgets (read-only)
-}
+// Legacy stubs — kept as no-ops because the / page redirects to role-specific
+// dashboards immediately after login. These should never be reached in practice.
+function showDesignations() { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showAdmins()       { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showClubs()        { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showEvents()       { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showProjects()     { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showProfile()      { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showReports()      { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
+function showBudgets()      { redirectToRoleDashboard(currentUser?.role, currentUser?.position); }
 
 function updateNavigation() {
     const navList = document.querySelector('#mainNav ul');
@@ -463,13 +438,23 @@ function handleRoleChange() {
     }
 }
 
-function showCreateDeptForm() {
-    const name = prompt('Department Name:');
-    const code = prompt('Department Code:');
-    const description = prompt('Description:');
-    
-    if (name && code && description) {
-        createDepartment({ name, code, description });
+async function showCreateDeptForm() {
+    const result = await UI.prompt({
+        title: 'Create department',
+        submitText: 'Create',
+        fields: [
+            { name: 'name', label: 'Name', required: true },
+            { name: 'code', label: 'Code', required: true, hint: 'Will be upper-cased' },
+            { name: 'description', label: 'Description', type: 'textarea' }
+        ]
+    });
+    if (!result) return;
+    if (result.name && result.code) {
+        createDepartment({
+            name: result.name.trim(),
+            code: result.code.trim().toUpperCase(),
+            description: (result.description || '').trim()
+        });
     }
 }
 
@@ -477,14 +462,14 @@ async function createDepartment(deptData) {
     try {
         await api.createDepartment(deptData);
         loadDepartments();
-        alert('Department created successfully!');
+        UI.toast('Department created successfully!', 'success');
     } catch (error) {
-        alert('Error creating department: ' + error.message);
+        UI.toast('Error creating department: ' + error.message, 'error');
     }
 }
 
 function editUser(id) {
-    alert('Edit user functionality - To be implemented');
+    UI.toast('Edit user functionality - To be implemented', 'info');
 }
 
 async function deleteUser(id) {
@@ -492,15 +477,15 @@ async function deleteUser(id) {
         try {
             await api.deleteUser(id);
             loadUsers();
-            alert('User deleted successfully!');
+            UI.toast('User deleted successfully!', 'success');
         } catch (error) {
-            alert('Error deleting user: ' + error.message);
+            UI.toast('Error deleting user: ' + error.message, 'error');
         }
     }
 }
 
 function editDepartment(id) {
-    alert('Edit department functionality - To be implemented');
+    UI.toast('Edit department functionality - To be implemented', 'info');
 }
 
 async function deleteDepartment(id) {
@@ -508,9 +493,9 @@ async function deleteDepartment(id) {
         try {
             await api.deleteDepartment(id);
             loadDepartments();
-            alert('Department deleted successfully!');
+            UI.toast('Department deleted successfully!', 'success');
         } catch (error) {
-            alert('Error deleting department: ' + error.message);
+            UI.toast('Error deleting department: ' + error.message, 'error');
         }
     }
 }
@@ -541,6 +526,7 @@ function redirectToRoleDashboard(role, position) {
     const dashboardUrls = {
         'superadmin': '/superadmin',
         'admin': '/admin',
+        'hod': '/hod',
         'teacher': '/teacher',
         'student': '/student'
     };
