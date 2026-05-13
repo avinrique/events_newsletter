@@ -11,17 +11,25 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         const response = await api.getMe();
         currentUser = response.data;
-        
+
         if (currentUser.role !== 'admin') {
             UI.toast('Access denied. Admin privileges required.', 'error');
+            api.clearToken();
             window.location.href = '/';
             return;
         }
-        
-        initializeAdminDashboard();
     } catch (error) {
         console.error('Authentication error:', error);
+        api.clearToken();
         window.location.href = '/';
+        return;
+    }
+
+    try {
+        initializeAdminDashboard();
+    } catch (error) {
+        console.error('Dashboard init error (staying on page):', error);
+        UI.toast('Dashboard failed to initialize — see console.', 'error');
     }
 });
 

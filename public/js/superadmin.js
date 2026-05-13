@@ -11,17 +11,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         const response = await api.getMe();
         currentUser = response.data;
-        
+
         if (currentUser.role !== 'superadmin') {
             UI.toast('Access denied. SuperAdmin privileges required.', 'error');
+            api.clearToken();
             window.location.href = '/';
             return;
         }
-        
-        initializeSuperAdminDashboard();
     } catch (error) {
         console.error('Authentication error:', error);
+        api.clearToken();
         window.location.href = '/';
+        return;
+    }
+
+    // Initialize the dashboard outside the auth try/catch so a render error
+    // doesn't ping-pong the user back to login.
+    try {
+        initializeSuperAdminDashboard();
+    } catch (error) {
+        console.error('Dashboard init error (staying on page):', error);
+        UI.toast('Dashboard failed to initialize — see console.', 'error');
     }
 });
 

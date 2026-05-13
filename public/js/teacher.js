@@ -15,30 +15,27 @@ class TeacherDashboard {
     }
 
     async init() {
-        try {
-            // Skip teacher authentication if we're on HOD page
-            if (window.location.pathname === '/hod' || window.location.pathname.includes('/hod')) {
-                return; // Let HOD.js handle authentication
-            }
-            
-            // Check if token exists
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
+        // Skip teacher authentication if we're on HOD page
+        if (window.location.pathname === '/hod' || window.location.pathname.includes('/hod')) {
+            return; // Let HOD.js handle authentication
+        }
 
-            // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        // Step 1: authenticate. Failures clear the token and redirect.
+        try {
             const authResponse = await this.api.getMe();
             if (!authResponse.success) {
-                // Clear invalid token and redirect
                 localStorage.removeItem('token');
                 window.location.href = '/';
                 return;
             }
 
             if (authResponse.data.role !== 'teacher') {
-                // Redirect to appropriate dashboard based on role
                 const roleRoutes = {
                     'student': '/student',
                     'hod': '/hod',
@@ -50,15 +47,22 @@ class TeacherDashboard {
             }
 
             this.currentUser = authResponse.data;
+        } catch (error) {
+            console.error('Authentication error:', error);
+            localStorage.removeItem('token');
+            window.location.href = '/';
+            return;
+        }
+
+        // Step 2: initialize the dashboard. Errors here must NOT redirect,
+        // or we get an infinite /teacher <-> / loop.
+        try {
             this.setupEventListeners();
             this.updateUserInfo();
             await this.loadDashboardData();
-            
         } catch (error) {
-            console.error('Initialization error:', error);
-            // Clear token and redirect on any error
-            localStorage.removeItem('token');
-            window.location.href = '/';
+            console.error('Dashboard init error (staying on page):', error);
+            if (window.UI) UI.toast('Dashboard failed to initialize — see console.', 'error');
         }
     }
 

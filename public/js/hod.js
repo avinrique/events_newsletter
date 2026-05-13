@@ -17,36 +17,46 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
+    // Step 1: authenticate. Any failure here clears the token and goes home.
     try {
         console.log('HOD Auth: Token found, calling getMe().');
         const response = await api.getMe();
         currentUser = response.data;
-        
-        // Debug: Log user data to help troubleshoot
+
         console.log('🔍 HOD Auth Check - User data:', {
             role: currentUser.role,
             position: currentUser.position,
             name: currentUser.name,
             email: currentUser.email
         });
-        
-        // Check if user has HOD privileges (role='teacher' with position='HOD')
+
         const isHOD = currentUser.role === 'teacher' && currentUser.position === 'HOD';
-        
         console.log('🔍 HOD Auth Check - isHOD:', isHOD);
-        
+
         if (!isHOD) {
             console.error('❌ HOD Auth Failed - User does not have HOD privileges');
-            UI.toast(`Access denied. HOD privileges required.\n\nUser details:\nRole: ${currentUser.role}\nPosition: ${currentUser.position}`, 'error');
+            UI.toast(`Access denied. HOD privileges required.`, 'error');
+            // Clear stale credentials so we don't loop back here from `/`.
+            api.clearToken();
             window.location.href = '/';
             return;
         }
-        
+    } catch (error) {
+        console.error('Authentication error:', error);
+        // Token is invalid / expired — clear it so we don't loop.
+        api.clearToken();
+        window.location.href = '/';
+        return;
+    }
+
+    // Step 2: initialize the dashboard. Any error here must NOT redirect,
+    // because that would cause an infinite /hod ↔ / loop with a still-valid token.
+    try {
         console.log('HOD Auth: User is HOD, initializing dashboard.');
         initializeHODDashboard();
     } catch (error) {
-        console.error('Authentication error:', error);
-        window.location.href = '/';
+        console.error('Dashboard init error (staying on page):', error);
+        UI.toast('Dashboard failed to initialize — see console.', 'error');
     }
 });
 

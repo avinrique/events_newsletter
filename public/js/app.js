@@ -6,11 +6,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             const response = await api.getMe();
             currentUser = response.data;
-            
+
             // Redirect to appropriate role dashboard
             redirectToRoleDashboard(currentUser.role, currentUser.position);
             return; // Don't continue with main page setup
         } catch (error) {
+            // Token is invalid/expired — clear it so we don't loop with /hod etc.
+            console.warn('Stale token, clearing:', error?.message);
+            api.clearToken();
             showLogin();
         }
     } else {
