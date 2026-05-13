@@ -154,8 +154,13 @@ function initializeTeacherFunctionality() {
     // Since HODs are teachers with position='HOD', they should have access to teacher functionality
     try {
         if (typeof TeacherDashboard !== 'undefined') {
-            window.teacherDashboard = new TeacherDashboard();
-            
+            // Reuse the instance teacher.js already created on DOMContentLoaded
+            // instead of constructing a second one (which double-fires its
+            // constructor log and any side-effects).
+            if (!window.teacherDashboard) {
+                window.teacherDashboard = new TeacherDashboard();
+            }
+
             // Set the current user for the teacher dashboard to work properly in HOD context
             // Ensure both _id and id properties exist for compatibility
             const userForTeacher = {
@@ -387,6 +392,8 @@ async function loadDashboardStats() {
             api.getEvents({ department: currentUser.department._id }),
             api.getUsers({ department: currentUser.department._id, role: 'student' })
         ]);
+        // Stash so loadRecentActivity can reuse and skip refetching.
+        window.__hodStatsCache = { clubsResponse, eventsResponse };
         
         // Update stats
         const pendingClubs = clubsResponse.data?.filter(club => club.status === 'pending').length || 0;
@@ -416,13 +423,17 @@ async function loadDashboardStats() {
 
 async function loadRecentActivity() {
     const activityList = document.getElementById('recentActivity');
-    
+
     try {
-        // Get recent clubs and events from the department
-        const [recentClubs, recentEvents] = await Promise.all([
-            api.getClubs({ department: currentUser.department._id }),
-            api.getEvents({ department: currentUser.department._id })
-        ]);
+        // Reuse the data already fetched by loadDashboardStats; only refetch
+        // if we somehow got called standalone.
+        const cached = window.__hodStatsCache;
+        const [recentClubs, recentEvents] = cached
+            ? [cached.clubsResponse, cached.eventsResponse]
+            : await Promise.all([
+                api.getClubs({ department: currentUser.department._id }),
+                api.getEvents({ department: currentUser.department._id })
+            ]);
         
         // Combine and sort by creation date
         const allActivities = [];

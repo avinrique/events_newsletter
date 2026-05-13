@@ -82,6 +82,12 @@ app.use('/api/newsletters', newsletterApiRoutes);
 // Newsletter HTML page + legacy public APIs
 app.use('/newsletter', newsletterRoutes);
 
+// Favicon (browser hits /favicon.ico automatically)
+app.get('/favicon.ico', (req, res) => {
+    res.type('image/svg+xml');
+    res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
 // Serve HTML pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
