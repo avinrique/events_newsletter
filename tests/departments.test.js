@@ -321,12 +321,14 @@ describe('Department Management Endpoints', () => {
             // Create additional designations
             await Designation.create({
                 name: 'Assistant Professor',
-                level: 3
+                level: 3,
+                createdBy: testData.users.superAdmin._id
             });
-            
+
             await Designation.create({
                 name: 'Associate Professor',
-                level: 2
+                level: 2,
+                createdBy: testData.users.superAdmin._id
             });
 
             const response = await request(app)
@@ -413,7 +415,8 @@ describe('Department Management Endpoints', () => {
             // Create a designation to delete
             const designation = await Designation.create({
                 name: 'Temporary Designation',
-                level: 10
+                level: 10,
+                createdBy: testData.users.superAdmin._id
             });
 
             const response = await request(app)

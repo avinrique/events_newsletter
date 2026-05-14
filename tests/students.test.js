@@ -17,12 +17,14 @@ describe('Student Routes Endpoints', () => {
             const otherDept = await require('../models/Department').create({
                 name: 'Electrical Engineering',
                 code: 'EE',
-                description: 'Electrical Engineering Department'
+                description: 'Electrical Engineering Department',
+                createdBy: testData.users.superAdmin._id
             });
 
             const designation2 = await require('../models/Designation').create({
                 name: 'Assistant Professor',
-                level: 2
+                level: 2,
+                createdBy: testData.users.superAdmin._id
             });
 
             // Teacher from different department
@@ -175,7 +177,8 @@ describe('Student Routes Endpoints', () => {
             const otherDept = await require('../models/Department').create({
                 name: 'Mechanical Engineering',
                 code: 'ME',
-                description: 'Mechanical Engineering Department'
+                description: 'Mechanical Engineering Department',
+                createdBy: testData.users.superAdmin._id
             });
 
             await User.create({

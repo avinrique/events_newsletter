@@ -220,7 +220,8 @@ describe('User Management Endpoints', () => {
             const otherDept = await require('../models/Department').create({
                 name: 'Mechanical Engineering',
                 code: 'ME',
-                description: 'Mechanical Engineering Department'
+                description: 'Mechanical Engineering Department',
+                createdBy: testData.users.superAdmin._id
             });
 
             const otherUser = await User.create({
