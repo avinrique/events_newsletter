@@ -5,25 +5,27 @@ const Designation = require('../../models/Designation');
 
 // Create test users with different roles
 const createTestUsers = async () => {
-    // Create test department
-    const department = await Department.create({
-        name: 'Computer Science',
-        code: 'CSE',
-        description: 'Computer Science and Engineering Department'
-    });
-
-    // Create test designation
-    const designation = await Designation.create({
-        name: 'Professor',
-        level: 1
-    });
-
-    // Create SuperAdmin
+    // Create SuperAdmin first (bootstrap user for audit trail on Department)
     const superAdmin = await User.create({
         name: 'Super Admin',
         email: 'superadmin@test.com',
         password: 'password123',
         role: 'superadmin'
+    });
+
+    // Create test department
+    const department = await Department.create({
+        name: 'Computer Science',
+        code: 'CSE',
+        description: 'Computer Science and Engineering Department',
+        createdBy: superAdmin._id
+    });
+
+    // Create test designation
+    const designation = await Designation.create({
+        name: 'Professor',
+        level: 1,
+        createdBy: superAdmin._id
     });
 
     // Create Admin
