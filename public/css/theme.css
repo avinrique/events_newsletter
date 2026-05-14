@@ -205,6 +205,7 @@ button.btn {
     transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
     text-decoration: none;
     user-select: none;
+    white-space: nowrap;
 }
 
 .btn:hover { background: var(--btn-bg-hover); color: var(--btn-fg); }
@@ -370,6 +371,33 @@ button.btn {
 }
 
 .form-group textarea { height: auto; padding: var(--space-2) var(--space-3); }
+
+/* Style all <select> elements (including those outside .form-group) to match the dark theme */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    height: 32px;
+    padding: 0 var(--space-6) 0 var(--space-3);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--color-text);
+    background-color: var(--color-bg-elevated);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3e%3cpath fill='%2398a2b3' d='M6 7L0 1l1.4-1.4L6 4.2 10.6-.4 12 1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right var(--space-3) center;
+    background-size: 10px 6px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
+}
+select option { background: var(--color-surface); color: var(--color-text); }
 
 .form-control:focus,
 .form-group input:focus,

@@ -459,14 +459,54 @@ function updateTeamSize() {
 
 // Dashboard Statistics
 async function loadDashboardStats() {
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(value);
+    };
     try {
-        // For now, set basic stats - we'll implement API calls as we build features
-        document.getElementById('myClubs').textContent = '0';
-        document.getElementById('myEvents').textContent = '0';
-        document.getElementById('myProjects').textContent = '0';
-        document.getElementById('myCertificates').textContent = '0';
-        
-        // TODO: Load actual stats when APIs are ready
+        const [clubs, projects, certs, participations] = await Promise.allSettled([
+            api.request('/clubs'),
+            api.request('/projects'),
+            api.request('/certificates'),
+            api.request('/event-participations')
+        ]);
+
+        const myId = String(currentUser?._id || currentUser?.id || '');
+        const sameId = (ref) => {
+            if (!ref) return false;
+            const id = typeof ref === 'object' ? (ref._id || ref.id) : ref;
+            return String(id) === myId;
+        };
+
+        let clubCount = 0;
+        if (clubs.status === 'fulfilled' && clubs.value?.success) {
+            clubCount = (clubs.value.data || []).filter(c =>
+                (c.members || []).some(m => sameId(m.student) || sameId(m))
+            ).length;
+        }
+
+        let projectCount = 0;
+        if (projects.status === 'fulfilled' && projects.value?.success) {
+            projectCount = (projects.value.data || []).filter(p =>
+                sameId(p.createdBy) ||
+                (p.teamMembers || []).some(m => sameId(m.student) || sameId(m))
+            ).length;
+        }
+
+        let certCount = 0;
+        if (certs.status === 'fulfilled' && certs.value?.success) {
+            certCount = (certs.value.data || []).filter(c => sameId(c.owner)).length;
+        }
+
+        let eventCount = 0;
+        if (participations.status === 'fulfilled' && participations.value?.success) {
+            eventCount = (participations.value.data || []).filter(p => sameId(p.student)).length;
+        }
+
+        setText('myClubs', clubCount);
+        setText('myEvents', eventCount);
+        setText('myProjects', projectCount);
+        setText('myCertificates', certCount);
     } catch (error) {
         console.error('Error loading dashboard stats:', error);
     }

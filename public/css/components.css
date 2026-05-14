@@ -113,6 +113,7 @@
 }
 
 .sidebar-nav,
+.sidebar-nav ul,
 .nav-menu {
     list-style: none;
     padding: 0;
@@ -120,7 +121,7 @@
 }
 
 .nav-menu li,
-.sidebar-nav li { margin: 0; }
+.sidebar-nav li { margin: 0; list-style: none; }
 
 .nav-link {
     display: flex;
@@ -955,15 +956,22 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-modal);
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    background: rgba(8, 10, 14, 0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     align-items: center;
     justify-content: center;
     padding: var(--space-5);
 }
 
 .modal.show { display: flex; }
+
+/* Legacy JS sets .modal { style.display = 'block' } which would skip flex centering.
+   Force flex layout whenever the modal is shown (any non-none inline display). */
+.modal[style*="display: block"],
+.modal[style*="display:block"],
+.modal[style*="display: flex"],
+.modal[style*="display:flex"] { display: flex !important; }
 
 .modal-content {
     background: var(--color-surface);

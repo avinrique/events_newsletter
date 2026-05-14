@@ -177,18 +177,18 @@
             <div class="modal-content">
                 <span class="close" id="closeAdminModal">&times;</span>
                 <h3>Create Admin Account</h3>
-                <form id="createAdminForm">
+                <form id="createAdminForm" autocomplete="off">
                     <div class="form-group">
                         <label for="adminName">Full Name:</label>
-                        <input type="text" id="adminName" name="name" required>
+                        <input type="text" id="adminName" name="name" required autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="adminEmail">Email:</label>
-                        <input type="email" id="adminEmail" name="email" required>
+                        <input type="email" id="adminEmail" name="email" required autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="adminPassword">Initial Password:</label>
-                        <input type="password" id="adminPassword" name="password" required minlength="6">
+                        <input type="password" id="adminPassword" name="password" required minlength="6" autocomplete="new-password">
                         <small>Admin can change this after first login</small>
                     </div>
                     <div class="form-actions">

@@ -419,8 +419,8 @@ exports.getDepartmentReport = async (req, res) => {
             Project.find({ department: deptId }),
             Club.find({ department: deptId }),
             Event.find({ department: deptId }),
-            Certificate.find({}).populate({ path: 'student', match: { department: deptId } }),
-            Internship.find({}).populate({ path: 'student', match: { department: deptId } })
+            Certificate.find({ department: deptId }),
+            Internship.find({ department: deptId })
         ]);
 
         const countBy = (arr, field) => arr.reduce((acc, x) => {
@@ -441,8 +441,8 @@ exports.getDepartmentReport = async (req, res) => {
             utilized:  sum.utilized  + (p.budget?.totalUtilized  || 0)
         }), { requested: 0, approved: 0, utilized: 0 });
 
-        const certCount = certs.filter(c => c.student).length;
-        const internCount = interns.filter(i => i.student).length;
+        const certCount = certs.length;
+        const internCount = interns.length;
 
         res.status(200).json({
             success: true,

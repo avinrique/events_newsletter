@@ -76,8 +76,10 @@
 
 .profile-hero .department-info {
     font-size: var(--fs-base);
-    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 500;
     margin-bottom: var(--space-3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .profile-hero .profile-status,

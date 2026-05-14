@@ -425,9 +425,12 @@ class TeacherDashboard {
         try {
             const response = await this.api.request('/projects');
             if (response.success) {
-                this.projects = response.data.filter(project => 
-                    project.mentor && project.mentor._id === this.currentUser.id
-                );
+                const myId = String(this.currentUser._id || this.currentUser.id);
+                this.projects = response.data.filter(project => {
+                    if (!project.mentor) return false;
+                    const mentorId = String(project.mentor._id || project.mentor);
+                    return mentorId === myId;
+                });
                 this.renderProjects();
             }
         } catch (error) {
@@ -755,25 +758,32 @@ class TeacherDashboard {
     
     async loadProfileStats() {
         try {
+            const myId = String(this.currentUser._id || this.currentUser.id);
+            const sameId = (ref) => {
+                if (!ref) return false;
+                const id = typeof ref === 'object' ? (ref._id || ref.id) : ref;
+                return String(id) === myId;
+            };
+
             // Count projects mentored by this teacher
             const projectsResponse = await this.api.request('/projects');
-            const myProjects = projectsResponse.success ? 
-                projectsResponse.data.filter(p => p.primaryMentor === this.currentUser._id) : [];
-            
-            // Count students assigned to this teacher
-            const studentsResponse = await this.api.request('/users/teachers/department');
-            const myStudents = studentsResponse.success ? 
-                studentsResponse.data.filter(s => s.proctor === this.currentUser._id || s.classTeacher === this.currentUser._id) : [];
-            
+            const myProjects = projectsResponse.success ?
+                projectsResponse.data.filter(p => sameId(p.mentor) || sameId(p.primaryMentor)) : [];
+
+            // Count students assigned to this teacher (use /users/students/all so we see all students)
+            const studentsResponse = await this.api.request('/users/students/all');
+            const myStudents = studentsResponse.success ?
+                studentsResponse.data.filter(s => sameId(s.proctor) || sameId(s.classTeacher)) : [];
+
             // Count events created by this teacher
             const eventsResponse = await this.api.request('/teacher-events');
-            const myEvents = eventsResponse.success ? 
-                eventsResponse.data.filter(e => e.createdBy === this.currentUser._id) : [];
-            
+            const myEvents = eventsResponse.success ?
+                eventsResponse.data.filter(e => sameId(e.createdBy)) : [];
+
             // Count clubs managed by this teacher
             const clubsResponse = await this.api.request('/clubs');
-            const myClubs = clubsResponse.success ? 
-                clubsResponse.data.filter(c => c.mentorId === this.currentUser._id) : [];
+            const myClubs = clubsResponse.success ?
+                clubsResponse.data.filter(c => sameId(c.mentor) || sameId(c.mentorId)) : [];
             
             // Update stats
             document.getElementById('profileProjectsCount').textContent = myProjects.length;
