@@ -642,22 +642,114 @@ class TeacherDashboard {
 
     renderProjects() {
         const projectsList = document.getElementById('projectsList');
-        
+
         if (this.projects.length === 0) {
             projectsList.innerHTML = '<p>No projects under mentorship.</p>';
             return;
         }
 
         projectsList.innerHTML = this.projects.map(project => `
-            <div class="project-card">
-                <h4>${this.escapeHtml(project.title)}</h4>
+            <div class="project-card" data-project-id="${project._id}" style="cursor: pointer;">
+                <h4>${this.escapeHtml(project.title)}
+                    <span class="status-badge status-${project.approvalStatus || 'approved'}" style="float:right;font-size:.75em;">${project.approvalStatus || 'approved'}</span>
+                </h4>
                 <p>${this.escapeHtml(project.description || 'No description')}</p>
                 <div class="project-meta">
                     <span><i class="fas fa-code"></i> ${project.projectType}</span>
                     <span><i class="fas fa-calendar"></i> ${this.formatDate(project.createdAt)}</span>
+                    <span><i class="fas fa-user-graduate"></i> ${this.escapeHtml(project.createdBy?.name || '—')}</span>
+                </div>
+                <div class="project-actions" style="margin-top: var(--space-3); display:flex; gap: var(--space-2);">
+                    <button class="btn btn-sm btn-secondary" data-project-action="view" data-project-id="${project._id}">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    ${project.approvalStatus === 'pending-approval' ? `
+                        <button class="btn btn-sm btn-success" data-project-action="approve" data-project-id="${project._id}">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" data-project-action="reject" data-project-id="${project._id}">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `).join('');
+
+        projectsList.querySelectorAll('[data-project-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = btn.dataset.projectAction;
+                const id = btn.dataset.projectId;
+                if (action === 'view') this.viewProjectDetails(id);
+                else if (action === 'approve') this.approveProjectById(id);
+                else if (action === 'reject') this.rejectProjectById(id);
+            });
+        });
+    }
+
+    async viewProjectDetails(projectId) {
+        try {
+            const response = await this.api.request(`/projects/${projectId}`);
+            const p = response.data;
+            const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+            let modal = document.getElementById('teacherViewProjectModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'teacherViewProjectModal';
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content modal-lg">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Project Details</h3>
+                            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+                        </div>
+                        <div class="modal-body project-detail-body"></div>
+                    </div>`;
+                document.body.appendChild(modal);
+                const close = () => { modal.style.display='none'; modal.classList.remove('show'); };
+                modal.querySelector('.modal-close').addEventListener('click', close);
+                modal.addEventListener('click', e => { if (e.target === modal) close(); });
+            }
+            modal.querySelector('.project-detail-body').innerHTML = `
+                <h3 style="margin:0 0 var(--space-3);">${esc(p.title)}
+                    <span class="status-badge status-${p.approvalStatus || 'approved'}">${esc(p.approvalStatus || 'approved')}</span>
+                </h3>
+                <p><strong>Type:</strong> ${esc(p.projectType || '—')} · <strong>Domain:</strong> ${esc(p.domain || '—')}</p>
+                ${p.description ? `<p>${esc(p.description)}</p>` : ''}
+                <p><strong>Created by:</strong> ${esc(p.createdBy?.name || '—')} ${p.createdBy?.usn ? `(${esc(p.createdBy.usn)})` : ''}</p>
+                ${(p.teamMembers || []).length ? `<p><strong>Team:</strong> ${(p.teamMembers || []).map(m => esc(m.student?.name || m.name || 'Member')).join(', ')}</p>` : ''}
+                <p><strong>Started:</strong> ${p.startDate ? new Date(p.startDate).toLocaleDateString() : '—'}
+                   ${p.endDate ? ` · <strong>Ended:</strong> ${new Date(p.endDate).toLocaleDateString()}` : ''}</p>
+                ${p.githubUrl ? `<p><strong>GitHub:</strong> <a href="${esc(p.githubUrl)}" target="_blank">${esc(p.githubUrl)}</a></p>` : ''}
+                ${p.liveUrl ? `<p><strong>Live demo:</strong> <a href="${esc(p.liveUrl)}" target="_blank">${esc(p.liveUrl)}</a></p>` : ''}
+            `;
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+        } catch (error) {
+            UI?.toast?.('Could not load project: ' + error.message, 'error');
+        }
+    }
+
+    async approveProjectById(projectId) {
+        try {
+            await this.api.request(`/projects/${projectId}/approve`, { method: 'PUT', body: {} });
+            UI?.toast?.('Project approved', 'success');
+            this.loadProjects();
+        } catch (error) {
+            UI?.toast?.('Could not approve project: ' + error.message, 'error');
+        }
+    }
+
+    async rejectProjectById(projectId) {
+        const reason = prompt('Reason for rejection?');
+        if (!reason) return;
+        try {
+            await this.api.request(`/projects/${projectId}/reject`, { method: 'PUT', body: { rejectionReason: reason } });
+            UI?.toast?.('Project rejected', 'success');
+            this.loadProjects();
+        } catch (error) {
+            UI?.toast?.('Could not reject project: ' + error.message, 'error');
+        }
     }
 
     renderStudents() {
@@ -1151,14 +1243,147 @@ class TeacherDashboard {
         }
     }
 
-    viewClub(clubId) {
-        // Implement club view functionality
-        console.log('View club:', clubId);
+    async viewClub(clubId) {
+        try {
+            const response = await this.api.request(`/clubs/${clubId}`);
+            const c = response.data;
+            const modal = document.getElementById('viewClubModal') || this._buildViewClubModal();
+            const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+            const myId = String(this.currentUser._id || this.currentUser.id);
+            const sameId = (ref) => ref && String((typeof ref === 'object' ? (ref._id || ref.id) : ref)) === myId;
+            const isPrimaryMentor = (c.mentors || []).some(m => m.isPrimaryMentor && sameId(m.teacher));
+
+            const members = (c.members || []).filter(m => m.isActive !== false);
+            const pendingMembers = members.filter(m => m.status === 'pending');
+            const approvedMembers = members.filter(m => m.status !== 'pending');
+
+            modal.querySelector('.view-club-body').innerHTML = `
+                <h3 style="margin: 0 0 var(--space-2) 0;">${escapeHtml(c.name)} <span class="status-badge status-${c.status}">${escapeHtml(c.status)}</span></h3>
+                ${c.purpose ? `<p>${escapeHtml(c.purpose)}</p>` : ''}
+                ${c.description ? `<p class="t-text-muted">${escapeHtml(c.description)}</p>` : ''}
+                <div class="form-row" style="margin: var(--space-4) 0;">
+                  <div><strong>Mentors:</strong> ${(c.mentors || []).map(m => escapeHtml(m.teacher?.name || '')).filter(Boolean).join(', ') || 'None'}</div>
+                  <div><strong>Established:</strong> ${c.establishedDate ? new Date(c.establishedDate).toLocaleDateString() : '—'}</div>
+                </div>
+                <h4>Members (${approvedMembers.length} active${pendingMembers.length ? `, ${pendingMembers.length} pending` : ''})</h4>
+                ${members.length === 0 ? '<p class="t-text-muted">No members yet.</p>' :
+                  `<table class="data-table" style="width:100%; margin-top: var(--space-2);">
+                     <thead><tr><th>Name</th><th>USN</th><th>Role</th><th>Status</th><th></th></tr></thead>
+                     <tbody>${members.map(m => `
+                       <tr data-member-id="${m._id}">
+                         <td>${escapeHtml(m.student?.name || 'Unknown')}</td>
+                         <td>${escapeHtml(m.student?.usn || m.student?.rollNumber || '—')}</td>
+                         <td>${escapeHtml(m.role || 'Member')}</td>
+                         <td><span class="status-badge status-${m.status || 'approved'}">${escapeHtml(m.status || 'approved')}</span></td>
+                         <td>${isPrimaryMentor && m.status === 'pending' ? `
+                           <button class="btn btn-sm btn-success" data-club-member-approve data-member-id="${m._id}">Approve</button>
+                           <button class="btn btn-sm btn-danger"  data-club-member-reject  data-member-id="${m._id}">Reject</button>
+                         ` : ''}</td>
+                       </tr>
+                     `).join('')}</tbody>
+                   </table>`}
+            `;
+
+            modal.querySelectorAll('[data-club-member-approve]').forEach(btn => {
+                btn.addEventListener('click', () => this._handleClubMemberDecision(clubId, btn.dataset.memberId, 'approved'));
+            });
+            modal.querySelectorAll('[data-club-member-reject]').forEach(btn => {
+                btn.addEventListener('click', () => this._handleClubMemberDecision(clubId, btn.dataset.memberId, 'rejected'));
+            });
+
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+        } catch (error) {
+            console.error('Error viewing club:', error);
+            UI?.toast?.('Could not load club details: ' + error.message, 'error');
+        }
     }
 
-    editClub(clubId) {
-        // Implement club edit functionality
-        console.log('Edit club:', clubId);
+    _buildViewClubModal() {
+        const wrap = document.createElement('div');
+        wrap.id = 'viewClubModal';
+        wrap.className = 'modal';
+        wrap.innerHTML = `
+          <div class="modal-content modal-lg">
+            <div class="modal-header">
+              <h3 class="modal-title">Club Details</h3>
+              <button type="button" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body view-club-body"></div>
+          </div>`;
+        document.body.appendChild(wrap);
+        const close = () => { wrap.style.display = 'none'; wrap.classList.remove('show'); };
+        wrap.querySelector('.modal-close').addEventListener('click', close);
+        wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+        return wrap;
+    }
+
+    async _handleClubMemberDecision(clubId, memberId, status) {
+        try {
+            await this.api.request(`/clubs/${clubId}/members/${memberId}/role`, {
+                method: 'PUT',
+                body: { status }
+            });
+            UI?.toast?.(`Member ${status}`, 'success');
+            this.viewClub(clubId);
+            this.loadClubs?.();
+        } catch (error) {
+            UI?.toast?.('Could not update member: ' + error.message, 'error');
+        }
+    }
+
+    async editClub(clubId) {
+        try {
+            const response = await this.api.request(`/clubs/${clubId}`);
+            const c = response.data;
+            const modal = document.getElementById('editClubModal') || this._buildEditClubModal();
+            modal.querySelector('#editClubName').value = c.name || '';
+            modal.querySelector('#editClubPurpose').value = c.purpose || '';
+            modal.querySelector('#editClubDescription').value = c.description || '';
+            modal.querySelector('#editClubEstablished').value = c.establishedDate ? new Date(c.establishedDate).toISOString().slice(0,10) : '';
+            modal.dataset.clubId = clubId;
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+        } catch (error) {
+            UI?.toast?.('Could not load club for edit: ' + error.message, 'error');
+        }
+    }
+
+    _buildEditClubModal() {
+        const wrap = document.createElement('div');
+        wrap.id = 'editClubModal';
+        wrap.className = 'modal';
+        wrap.innerHTML = `
+          <div class="modal-content modal-md">
+            <div class="modal-header">
+              <h3 class="modal-title">Edit Club</h3>
+              <button type="button" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <form id="editClubForm" class="modal-form">
+              <div class="form-group"><label>Name</label><input id="editClubName" name="name" required></div>
+              <div class="form-group"><label>Purpose</label><textarea id="editClubPurpose" name="purpose"></textarea></div>
+              <div class="form-group"><label>Description</label><textarea id="editClubDescription" name="description"></textarea></div>
+              <div class="form-group"><label>Established Date</label><input id="editClubEstablished" name="establishedDate" type="date"></div>
+              <div class="form-actions"><button type="submit" class="btn btn-primary">Save</button><button type="button" class="btn btn-secondary" data-modal-cancel>Cancel</button></div>
+            </form>
+          </div>`;
+        document.body.appendChild(wrap);
+        const close = () => { wrap.style.display = 'none'; wrap.classList.remove('show'); };
+        wrap.querySelectorAll('.modal-close, [data-modal-cancel]').forEach(b => b.addEventListener('click', close));
+        wrap.querySelector('#editClubForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const payload = Object.fromEntries(fd.entries());
+            try {
+                await this.api.request(`/clubs/${wrap.dataset.clubId}`, { method: 'PUT', body: payload });
+                UI?.toast?.('Club updated', 'success');
+                close();
+                this.loadClubs?.();
+            } catch (error) {
+                UI?.toast?.('Could not save club: ' + error.message, 'error');
+            }
+        });
+        return wrap;
     }
 
     // Student Management Methods

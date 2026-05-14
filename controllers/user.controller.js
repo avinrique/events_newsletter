@@ -132,9 +132,12 @@ exports.getUser = async (req, res) => {
             });
         }
 
-        // Check department access
-        if ((req.user.role === 'hod' || req.user.role === 'teacher') && 
-            user.department.toString() !== req.user.department.toString()) {
+        // Check department access. Note: user.department is populated above, so
+        // we must compare ObjectId hex strings (._id), not the populated doc.
+        const userDeptId = user.department?._id?.toString() ?? user.department?.toString();
+        const myDeptId = req.user.department?._id?.toString() ?? req.user.department?.toString();
+        if ((req.user.role === 'hod' || req.user.role === 'teacher') &&
+            userDeptId && myDeptId && userDeptId !== myDeptId) {
             return res.status(403).json({
                 success: false,
                 message: 'Not authorized to view users from another department'

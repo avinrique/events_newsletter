@@ -1397,6 +1397,8 @@ async function handleProjectAdd(e) {
         const projectFiles = formData.getAll('projectFiles');
         const hasFiles = projectFiles && projectFiles.length > 0 && projectFiles[0].size > 0;
         
+        const editId = e.target.dataset.editId;
+
         if (hasFiles) {
             // If files are present, use FormData for file upload
             // Add all the project data to FormData
@@ -1409,19 +1411,26 @@ async function handleProjectAdd(e) {
                     formData.set(key, projectData[key]);
                 }
             });
-            
-            await api.addProject(formData);
+            if (editId) {
+                await api.request(`/projects/${editId}`, { method: 'PUT', body: formData, headers: {} });
+            } else {
+                await api.addProject(formData);
+            }
         } else {
-            // No files, use JSON
-            await api.createProject(projectData);
+            if (editId) {
+                await api.request(`/projects/${editId}`, { method: 'PUT', body: projectData });
+            } else {
+                await api.createProject(projectData);
+            }
         }
-        
+
         // Reset form and close modal
         closeProjectModal();
         resetProjectForm();
+        delete e.target.dataset.editId;
         loadMyProjects();
         loadDashboardStats();
-        showNotification('Project added successfully!', 'success');
+        showNotification(editId ? 'Project updated successfully!' : 'Project added successfully!', 'success');
         
     } catch (error) {
         console.error('Error adding project:', error);
@@ -1480,8 +1489,28 @@ async function deleteInternship(id) {
     }
 }
 
-function editInternship(id) {
-    UI.toast('Edit internship functionality - Coming soon!', 'info');
+async function editInternship(id) {
+    try {
+        const response = await api.request(`/internships/${id}`);
+        const i = response.data;
+        const modal = document.getElementById('addInternshipModal');
+        const form = document.getElementById('addInternshipForm');
+        form.dataset.editId = id;
+        document.getElementById('companyName').value = i.companyName || '';
+        document.getElementById('position').value = i.position || '';
+        document.getElementById('startDate').value = i.startDate ? new Date(i.startDate).toISOString().slice(0,10) : '';
+        document.getElementById('endDate').value = i.endDate ? new Date(i.endDate).toISOString().slice(0,10) : '';
+        document.getElementById('currentlyWorking').checked = !!i.currentlyWorking;
+        document.getElementById('location').value = i.location || '';
+        document.querySelector('#addInternshipModal textarea[name="description"]').value = i.description || '';
+        document.getElementById('skills').value = Array.isArray(i.skills) ? i.skills.join(', ') : (i.skills || '');
+        const title = modal.querySelector('h3, .modal-title');
+        if (title) title.textContent = 'Edit Internship';
+        modal.style.display = 'block';
+        modal.classList.add('show');
+    } catch (error) {
+        UI.toast('Could not load internship: ' + error.message, 'error');
+    }
 }
 
 async function deleteProject(id) {
@@ -1503,8 +1532,38 @@ function viewProject(id) {
     showProjectDetails(id);
 }
 
-function editProject(id) {
-    UI.toast('Edit project functionality - Coming soon!', 'info');
+async function editProject(id) {
+    try {
+        const response = await api.getProject(id);
+        const p = response.data;
+        const modal = document.getElementById('addProjectModal');
+        const form = document.getElementById('addProjectForm');
+        form.dataset.editId = id;
+        const setIfExists = (selector, value) => {
+            const el = modal.querySelector(selector);
+            if (el) el.value = value ?? '';
+        };
+        setIfExists('#projectTitle', p.title);
+        setIfExists('#projectType', p.projectType);
+        setIfExists('#projectDomain', p.domain);
+        setIfExists('#projectStatus', p.status);
+        setIfExists('textarea[name="description"]', p.description);
+        setIfExists('#projectTechnologies', Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies);
+        setIfExists('#projectTeamSize', p.teamSize);
+        setIfExists('#projectStartDate', p.startDate ? new Date(p.startDate).toISOString().slice(0,10) : '');
+        setIfExists('#projectEndDate', p.endDate ? new Date(p.endDate).toISOString().slice(0,10) : '');
+        setIfExists('#projectGithub', p.githubUrl);
+        setIfExists('#projectLive', p.liveUrl);
+        setIfExists('#driveLink', p.driveLink);
+        setIfExists('#youtubeLink', p.youtubeLink);
+        setIfExists('#documentationUrl', p.documentationUrl);
+        const title = modal.querySelector('h3, .modal-title');
+        if (title) title.textContent = 'Edit Project';
+        modal.style.display = 'block';
+        modal.classList.add('show');
+    } catch (error) {
+        UI.toast('Could not load project: ' + error.message, 'error');
+    }
 }
 
 async function showProjectDetails(projectId) {

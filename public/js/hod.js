@@ -732,8 +732,41 @@ async function loadPendingEvents() {
 }
 
 async function loadPendingBudgets() {
-    // TODO: Implement budget loading when API is ready
-    document.getElementById('pendingBudgets').innerHTML = '<p>Budget approval functionality - To be implemented</p>';
+    const target = document.getElementById('pendingBudgets');
+    target.innerHTML = '<p class="t-text-muted">Loading budget requests...</p>';
+    try {
+        // Pending budgets surface through the event/project records that include a non-zero requested amount.
+        const [events, projects] = await Promise.all([
+            api.getEvents({ department: currentUser.department._id, status: 'pending' }),
+            api.request('/projects?department=' + currentUser.department._id + '&approvalStatus=pending-approval').catch(() => ({ data: [] }))
+        ]);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        const cards = [];
+        (events.data || []).forEach(e => {
+            const req = e.budget?.totalRequested || 0;
+            if (req > 0) cards.push({ type: 'event', id: e._id, title: e.title, requested: req, by: e.organizer?.name || e.createdBy?.name || '—' });
+        });
+        (projects.data || []).forEach(p => {
+            const req = p.budget?.totalRequested || 0;
+            if (req > 0) cards.push({ type: 'project', id: p._id, title: p.title, requested: req, by: p.createdBy?.name || '—' });
+        });
+        if (cards.length === 0) {
+            target.innerHTML = '<p class="t-text-muted">No pending budget requests.</p>';
+            return;
+        }
+        target.innerHTML = cards.map(c => `
+            <div class="data-card">
+                <h4>${esc(c.title)} <span class="t-text-muted">· ${esc(c.type)}</span></h4>
+                <div class="card-meta">Requested by: ${esc(c.by)} · ₹${Number(c.requested).toLocaleString()}</div>
+                <div class="card-actions">
+                    <button class="btn btn-secondary" onclick="window.location.hash='#budgets'">Review in Budget Approvals</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading pending budgets:', error);
+        target.innerHTML = '<p class="t-text-muted">Could not load budget requests.</p>';
+    }
 }
 
 // Club Management
@@ -981,10 +1014,47 @@ async function loadProjects() {
 }
 
 // Project Action Functions
-function viewProject(projectId) {
-    // TODO: Implement project view modal or redirect to project details
-    console.log('Viewing project:', projectId);
-    UI.toast(`Project viewing feature to be implemented. Project ID: ${projectId}`, 'info');
+async function viewProject(projectId) {
+    try {
+        const response = await api.request(`/projects/${projectId}`);
+        const p = response.data;
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        let modal = document.getElementById('hodViewProjectModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'hodViewProjectModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+              <div class="modal-content modal-lg">
+                <div class="modal-header">
+                  <h3 class="modal-title">Project Details</h3>
+                  <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body project-detail-body"></div>
+              </div>`;
+            document.body.appendChild(modal);
+            const close = () => { modal.style.display='none'; modal.classList.remove('show'); };
+            modal.querySelector('.modal-close').addEventListener('click', close);
+            modal.addEventListener('click', e => { if (e.target === modal) close(); });
+        }
+        modal.querySelector('.project-detail-body').innerHTML = `
+          <h3 style="margin:0 0 var(--space-3);">${esc(p.title)} <span class="status-badge status-${p.approvalStatus || 'pending'}">${esc(p.approvalStatus || 'pending')}</span></h3>
+          <p><strong>Type:</strong> ${esc(p.projectType || '—')} · <strong>Domain:</strong> ${esc(p.domain || '—')}</p>
+          <p><strong>Description:</strong> ${esc(p.description || '—')}</p>
+          <p><strong>Created by:</strong> ${esc(p.createdBy?.name || '—')} ${p.createdBy?.usn ? '(' + esc(p.createdBy.usn) + ')' : ''}</p>
+          <p><strong>Mentor:</strong> ${esc(p.mentor?.name || 'None')}</p>
+          ${(p.teamMembers || []).length ? `<p><strong>Team:</strong> ${(p.teamMembers || []).map(m => esc(m.student?.name || m.name || 'Member')).join(', ')}</p>` : ''}
+          <p><strong>Started:</strong> ${p.startDate ? new Date(p.startDate).toLocaleDateString() : '—'}
+             ${p.endDate ? ` · <strong>Ended:</strong> ${new Date(p.endDate).toLocaleDateString()}` : ''}</p>
+          ${p.technologies ? `<p><strong>Technologies:</strong> ${esc(Array.isArray(p.technologies) ? p.technologies.join(', ') : p.technologies)}</p>` : ''}
+          ${p.githubUrl ? `<p><strong>GitHub:</strong> <a href="${esc(p.githubUrl)}" target="_blank">${esc(p.githubUrl)}</a></p>` : ''}
+          ${p.liveUrl ? `<p><strong>Live demo:</strong> <a href="${esc(p.liveUrl)}" target="_blank">${esc(p.liveUrl)}</a></p>` : ''}
+        `;
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    } catch (error) {
+        UI.toast('Could not load project: ' + error.message, 'error');
+    }
 }
 
 async function approveProject(projectId) {
