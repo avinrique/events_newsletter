@@ -21,23 +21,20 @@
 /* ---------------- Header / topbar ---------------- */
 .header {
     grid-area: header;
-    background: linear-gradient(180deg, rgba(22, 25, 39, 0.85) 0%, rgba(22, 25, 39, 0.70) 100%);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: var(--color-bg);
     color: var(--color-text);
     display: flex;
     align-items: center;
-    padding: 0 var(--space-7);
+    padding: 0 var(--space-6);
     border-bottom: 1px solid var(--color-border);
-    box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
 }
 
 .header h1 {
-    color: var(--color-text-inverse);
-    font-size: var(--fs-lg);
+    color: var(--color-text);
+    font-size: var(--fs-base);
     font-weight: 600;
     margin: 0;
     display: flex;
@@ -45,7 +42,7 @@
     gap: var(--space-2);
 }
 
-.header h1 i { color: var(--color-text-inverse); opacity: 0.95; }
+.header h1 i { color: var(--color-text-muted); }
 
 .header-content {
     display: flex;
@@ -71,18 +68,19 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    color: var(--color-text-inverse);
+    color: var(--color-text-secondary);
     font-weight: 500;
     font-size: var(--fs-sm);
 }
 
 .user-info .avatar,
 .user-avatar {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.25);
-    color: var(--color-text-inverse);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -128,13 +126,14 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-2) var(--space-4);
+    margin: 1px var(--space-2);
     color: var(--color-text-secondary);
     text-decoration: none;
     font-size: var(--fs-sm);
     font-weight: 500;
-    border-left: 3px solid transparent;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    border-radius: var(--radius-sm);
+    transition: background 0.1s ease, color 0.1s ease;
     cursor: pointer;
 }
 
@@ -144,10 +143,9 @@
 }
 
 .nav-link.active {
-    color: var(--color-primary-dark);
-    background: var(--color-primary-light);
-    border-left-color: var(--color-primary);
-    font-weight: 600;
+    color: var(--color-text);
+    background: var(--color-surface-2);
+    font-weight: 500;
 }
 
 .nav-link i {
@@ -201,8 +199,8 @@
 
 .admin-nav .nav-link.active,
 .superadmin-nav .nav-link.active {
-    background: var(--gradient-primary);
-    color: var(--color-text-inverse);
+    background: var(--color-surface-2);
+    color: var(--color-text);
     border-left: none;
 }
 
@@ -268,93 +266,72 @@
     margin-bottom: var(--space-6);
 }
 
-/* Stat card — supports both theme structure and legacy
-   (.stat-number, .stat-content, .stat-icon as direct children). */
+/* Stat card — flat. No accent stripe, no color cycle. Numbers do the talking. */
 .stat-card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
     display: flex;
     align-items: center;
     gap: var(--space-4);
-    position: relative;
-    overflow: hidden;
     color: var(--color-text);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.12s ease;
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
+.stat-card:hover { border-color: var(--color-border-strong); }
 
-.stat-card::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 4px;
-    background: var(--gradient-primary);
-}
-
-/* Color-cycle stat cards inside .stats-grid for visual rhythm,
-   matching theme stat variants without per-role overrides. */
-.stats-grid > .stat-card:nth-child(4n+2)::before { background: var(--gradient-success); }
-.stats-grid > .stat-card:nth-child(4n+3)::before { background: var(--gradient-warning); }
-.stats-grid > .stat-card:nth-child(4n+4)::before { background: var(--gradient-info); }
+.stat-card::before { content: none; }
 
 .stat-card .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-md);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-primary-light);
-    color: var(--color-primary);
-    font-size: 1.25rem;
+    background: var(--color-surface-2);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
     flex-shrink: 0;
 }
-
-.stats-grid > .stat-card:nth-child(4n+2) .stat-icon { background: var(--color-success-bg); color: var(--color-success); }
-.stats-grid > .stat-card:nth-child(4n+3) .stat-icon { background: var(--color-warning-bg); color: var(--color-warning); }
-.stats-grid > .stat-card:nth-child(4n+4) .stat-icon { background: var(--color-info-bg);    color: var(--color-info); }
 
 .stat-content,
 .stat-details,
 .stat-body { flex: 1; min-width: 0; }
 
 .stat-card h3 {
-    font-size: var(--fs-2xl);
-    font-weight: 700;
+    font-size: var(--fs-xl);
+    font-weight: 600;
     color: var(--color-text);
-    margin: 0 0 2px 0;
+    margin: 0;
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
 }
 
 .stat-card p {
     color: var(--color-text-muted);
-    font-size: var(--fs-sm);
-    margin: 0;
+    font-size: var(--fs-xs);
+    margin: 2px 0 0 0;
 }
 
 .stat-number,
 .stat-value {
-    font-size: var(--fs-2xl);
-    font-weight: 700;
+    font-size: var(--fs-xl);
+    font-weight: 600;
     color: var(--color-text);
     line-height: 1;
     display: block;
     margin: 0;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
 }
 
 .stat-label {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
-    margin-top: var(--space-1);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin-top: 2px;
 }
 
 .stat-item {
@@ -472,15 +449,7 @@
 }
 
 .report-card::before,
-.budget-card::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 4px;
-    background: var(--gradient-primary);
-}
-
-.budget-card::before { background: var(--gradient-warning); }
+.budget-card::before { content: none; }
 
 .report-card h4,
 .budget-card h4 {
@@ -733,21 +702,22 @@
 .profile-avatar,
 .profile-avatar-large,
 .student-avatar-large {
-    width: 80px;
-    height: 80px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: var(--gradient-primary);
-    color: var(--color-text-inverse);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: var(--fs-xl);
+    font-weight: 600;
+    font-size: var(--fs-md);
     flex-shrink: 0;
 }
 
 .profile-avatar-large.large,
-.student-avatar-large.large { width: 96px; height: 96px; font-size: var(--fs-2xl); }
+.student-avatar-large.large { width: 72px; height: 72px; font-size: var(--fs-lg); }
 
 .avatar-overlay {
     position: absolute;
@@ -1146,15 +1116,12 @@
 
 /* ---------------- Login / index page (legacy) ---------------- */
 .login-container {
-    max-width: 440px;
+    max-width: 400px;
     margin: 80px auto;
-    padding: var(--space-9) var(--space-8);
-    background: var(--color-surface-glass);
-    border: 1px solid var(--color-border-strong);
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: var(--space-7);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
 }
 
 .login-container h2 {
