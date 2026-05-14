@@ -82,12 +82,28 @@ exports.createClub = async (req, res) => {
 exports.getClubs = async (req, res) => {
     try {
         let query = { department: req.user.department };
-        
-        // For students and teachers, only show approved clubs
-        if (req.user.role === 'student' || req.user.role === 'teacher') {
+
+        const isHOD = req.user.role === 'teacher' && req.user.position === 'HOD';
+
+        // Students only see approved clubs.
+        // Teachers (non-HOD) see approved clubs + their own (pending/rejected) so they can track creation status.
+        // HODs see every club in their department regardless of status.
+        if (req.user.role === 'student') {
             query.status = 'approved';
+        } else if (req.user.role === 'teacher' && !isHOD) {
+            query.$or = [
+                { status: 'approved' },
+                { createdBy: req.user._id },
+                { 'mentors.teacher': req.user._id }
+            ];
         }
-        // HODs can see all clubs in their department (pending, approved, rejected)
+
+        // Honor explicit ?status= filter (used by HOD's "pending club proposals" loader).
+        if (req.query.status) {
+            // Override any role-based status branch above.
+            delete query.$or;
+            query.status = req.query.status;
+        }
 
         const clubs = await Club.find(query)
             .populate([

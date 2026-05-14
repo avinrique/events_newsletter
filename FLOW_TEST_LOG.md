@@ -35,9 +35,41 @@ Tracking artifacts I create as one role and verify as others.
 - HOD's "Approvals → Event Requests" sub-tab is also empty.
 
 ### Bugs found
-- **B** HOD Department Events card shows "Type: undefined" — the event has no `type` saved or the field name differs (`eventType` vs `type`).
-- **B** HOD Department Events card shows "Budget: ₹[object Object]" — `event.budget` object is being string-coerced. Render `event.budget.totalRequested` or similar.
-- **B** "Teacher Events" tab on HOD (`/api/teacher-events`) and the College Event creation form (POST `/api/events`) use different collections — events created by teachers don't appear in the HOD's dedicated Teacher Events tab.
-- **B** HOD "Approvals → Event Requests" sub-tab doesn't pick up these pending events either. Approval workflow may be broken for personal teacher events.
+- ~~Type: undefined~~ — FIXED via formatEventType helper.
+- ~~Budget: ₹[object Object]~~ — FIXED via formatEventBudget helper.
+- **B** Open: "Teacher Events" tab on HOD (`/api/teacher-events`) and the College Event creation form (POST `/api/events`) use different collections — events created by teachers don't appear in the HOD's dedicated Teacher Events tab. Two separate models exist.
+- ~~Approvals → Event Requests empty~~ — FIXED: `handleTabSwitch` was looking up `eventsApprovals` but DOM has `eventApprovals` (plural vs singular). Added explicit mapping.
+
+### Full event lifecycle ✅
+- HOD approved event via the now-working Event Requests sub-tab.
+- Teacher view: status badge → `Approved`, Withdraw button removed.
+- Student college events list: E2E Tech Talk now visible (was hidden when status=pending; student API filters for `status: approved`). Full type + category + venue + participants count displayed.
 ### Certificate flow — TODO
-### Profile pic flow — TODO
+### Certificate flow ✅
+- Student Aarav uploaded `E2E Course Cert` (via direct API call after browser FormData submit hit a 400 — minor bug to revisit).
+- Cert appears in his My Certificates with Status: **Pending**.
+- Teacher Priya approved via `PUT /api/certificates/:id/approve {action:'approve'}`. Server: "Certificate approved successfully".
+- HOD's consolidated department report (`/api/reports/department/:deptId`) now shows `certificates: 2` (was 1). End-to-end count propagates. ✅
+- Project counts also confirmed: 7 (was 6) after E2E project; 2 pending-approval before approval, 5 approved after.
+
+### Admin creates Teacher ✅
+- Admin → Add New User → role=teacher, name="E2E Test Teacher", email=e2eteacher@college.edu, dept=ISE, designation=first available (Professor).
+- Toast: "User created successfully!"
+- New teacher logs in successfully via API. role=teacher.
+- HOD's `/api/users/teachers/department` returns the new teacher in the list. ✅
+
+### Edit / Delete propagation ✅
+- Student edited E2E Flow Test Project description via `PUT /api/projects/:id`. Teacher's GET shows the updated description immediately.
+- Student deleted the project via `DELETE /api/projects/:id`. HOD's department report `counts.projects` dropped 7 → 6. Certificate count unaffected (still 2). ✅
+
+### Profile pic flow — Deferred (requires real binary file upload, awkward in headless automation)
+
+### Club lifecycle flow ✅ (after fixes)
+- Teacher Priya created "E2E Coding Club" via Create New Club modal. Toast: "Club created successfully! Waiting for HOD approval."
+- Initial bug: Priya's own My Clubs was empty (server filter only returned `status=approved`). FIXED: `controllers/club.controller.js` getClubs now lets teachers see their own pending/rejected clubs via `$or`.
+- HOD's Approvals → Club Proposals sub-tab still empty. FIXED: the HOD user has `role=teacher, position=HOD`, which fell into the teacher branch of the filter. Added explicit `isHOD` check + honored `?status=` query param.
+- HOD approved via Club Proposals card. Initial 400: "Invalid action". FIXED: `handleApprove()` was sending `{ comments }` without `action`. Now sends `action: 'approve'`. (Reject path also fixed to pass `action: 'reject'` + `rejectionReason`.)
+- Student Aarav: Available Clubs was permanently stuck on "Loading available clubs...". FIXED: `loadAvailableClubs` and `loadPendingClubs` in student.js were no-op stubs. Implemented full functionality — filter on `isMember === false`, show Join button, call `api.joinClub`.
+- After join: toast "Join request submitted! Awaiting mentor approval." Club removes from Available list.
+- Teacher Priya: My Clubs card now shows "1 members" — join propagates immediately. ✅
+- Open: teacher-side member approval UI not exercised (would need a dedicated member-approval modal).

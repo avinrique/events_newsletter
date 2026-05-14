@@ -579,11 +579,79 @@ async function loadMyClubs() {
 }
 
 async function loadAvailableClubs() {
-    document.getElementById('availableClubsList').innerHTML = '<p>Loading available clubs...</p>';
+    const target = document.getElementById('availableClubsList');
+    target.innerHTML = '<p class="t-text-muted">Loading available clubs...</p>';
+    try {
+        const response = await api.request('/clubs');
+        const clubs = (response.data || []).filter(c => c.status === 'approved' && !c.isMember);
+        if (clubs.length === 0) {
+            target.innerHTML = '<p class="t-text-muted">No clubs available to join right now.</p>';
+            return;
+        }
+        target.innerHTML = clubs.map(c => `
+            <div class="club-card card">
+                <div class="card-header">
+                    <h5 class="card-title">${UI.escapeHtml(c.name)}</h5>
+                    ${UI.statusBadge(c.status)}
+                </div>
+                ${c.purpose ? `<p>${UI.escapeHtml(c.purpose)}</p>` : ''}
+                <p class="t-text-muted">
+                    <i class="fas fa-user-tie"></i> ${UI.escapeHtml(c.primaryMentor?.name || 'No mentor')}
+                    · <i class="fas fa-users"></i> ${c.memberCount || 0} members
+                </p>
+                <button class="btn btn-primary btn-sm" data-action="join-club" data-club-id="${c._id}">
+                    <i class="fas fa-user-plus"></i> Join Club
+                </button>
+            </div>
+        `).join('');
+        target.querySelectorAll('button[data-action="join-club"]').forEach(btn => {
+            btn.addEventListener('click', () => requestJoinClub(btn.dataset.clubId));
+        });
+    } catch (error) {
+        console.error('Error loading available clubs:', error);
+        target.innerHTML = '<p class="t-text-muted">Could not load clubs.</p>';
+    }
 }
 
 async function loadPendingClubs() {
-    document.getElementById('pendingClubsList').innerHTML = '<p>No pending club requests.</p>';
+    const target = document.getElementById('pendingClubsList');
+    target.innerHTML = '<p class="t-text-muted">Loading pending requests...</p>';
+    try {
+        const response = await api.request('/clubs');
+        const myId = String(currentUser?._id || currentUser?.id || '');
+        const pending = (response.data || []).filter(c =>
+            (c.members || []).some(m => String(m.student?._id || m.student) === myId && m.status === 'pending')
+        );
+        if (pending.length === 0) {
+            target.innerHTML = '<p class="t-text-muted">You have no pending club requests.</p>';
+            return;
+        }
+        target.innerHTML = pending.map(c => `
+            <div class="club-card card">
+                <h5 class="card-title">${UI.escapeHtml(c.name)}</h5>
+                <p class="t-text-muted">Awaiting mentor approval.</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading pending clubs:', error);
+        target.innerHTML = '<p class="t-text-muted">Could not load pending requests.</p>';
+    }
+}
+
+async function requestJoinClub(clubId) {
+    try {
+        const response = await api.joinClub(clubId);
+        if (response.success) {
+            UI.toast('Join request submitted! Awaiting mentor approval.', 'success');
+            loadAvailableClubs();
+            loadMyClubs?.();
+            loadDashboardStats?.();
+        } else {
+            UI.toast('Could not join club: ' + (response.message || 'unknown error'), 'error');
+        }
+    } catch (error) {
+        UI.toast('Could not join club: ' + error.message, 'error');
+    }
 }
 
 async function loadUpcomingEventsList() {

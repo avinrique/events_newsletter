@@ -1,6 +1,27 @@
 let currentUser = null;
 let currentApprovalItem = null;
 
+// Display helpers for Event records
+function formatEventType(event) {
+    const raw = event.eventType || event.type || 'event';
+    return raw
+        .split('-')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+}
+function formatEventDate(event) {
+    const d = event.eventDate || event.startDate || event.date;
+    return d ? new Date(d).toLocaleDateString() : '—';
+}
+function formatEventBudget(event) {
+    const b = event.budget;
+    if (!b) return '';
+    // Schema stores object { totalRequested, totalApproved, totalUtilized } — render the requested amount.
+    const requested = typeof b === 'number' ? b : (b.totalRequested ?? 0);
+    if (!requested) return '';
+    return `<p><strong>Budget:</strong> ₹${Number(requested).toLocaleString()}</p>`;
+}
+
 // Initialize HOD Dashboard
 document.addEventListener('DOMContentLoaded', async function() {
     // Immediate modal hiding
@@ -341,15 +362,25 @@ function handleNavigation(e) {
 
 function handleTabSwitch(e) {
     const tabName = e.target.getAttribute('data-tab');
-    
-    // Update active tab
+
+    // Update active tab button
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     e.target.classList.add('active');
-    
-    // Show corresponding content
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.getElementById(tabName + 'Approvals').classList.add('active');
-    
+
+    // HOD approvals sub-tabs use singular container IDs (clubApprovals/eventApprovals/budgetApprovals)
+    // while data-tab values are plural. Map plural -> singular here.
+    const containerIdMap = {
+        clubs: 'clubApprovals',
+        events: 'eventApprovals',
+        budgets: 'budgetApprovals'
+    };
+    const containerId = containerIdMap[tabName] || (tabName + 'Approvals');
+    const container = document.getElementById(containerId);
+    if (container) {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        container.classList.add('active');
+    }
+
     // Load tab-specific data
     switch(tabName) {
         case 'clubs':
@@ -673,11 +704,11 @@ async function loadPendingEvents() {
                 <div class="data-card">
                     <h4>${event.title}</h4>
                     <div class="card-meta">
-                        Type: ${event.type} | Date: ${new Date(event.eventDate).toLocaleDateString()}
-                        ${event.organizer ? ` | Organizer: ${event.organizer.name}` : ''}
+                        Type: ${formatEventType(event)} | Date: ${formatEventDate(event)}
+                        ${event.organizer?.name ? ` | Organizer: ${event.organizer.name}` : ''}
                     </div>
                     <p>${event.description}</p>
-                    ${event.budget ? `<p><strong>Budget:</strong> ₹${event.budget.toLocaleString()}</p>` : ''}
+                    ${formatEventBudget(event)}
                     <div class="card-actions">
                         <button class="btn btn-success" data-action="approve" data-id="${event._id}" data-type="event">
                             <i class="fas fa-check"></i> Approve
@@ -754,12 +785,12 @@ async function loadEvents() {
                 <div class="data-card">
                     <h4>${event.title}</h4>
                     <div class="card-meta">
-                        Type: ${event.type} | Date: ${new Date(event.eventDate).toLocaleDateString()} |
+                        Type: ${formatEventType(event)} | Date: ${formatEventDate(event)} |
                         Status: <span class="status-badge status-${event.status}">${event.status}</span>
                     </div>
                     <p>${event.description}</p>
-                    ${event.budget ? `<p><strong>Budget:</strong> ₹${event.budget.toLocaleString()}</p>` : ''}
-                    ${event.organizer ? `<p><strong>Organizer:</strong> ${event.organizer.name}</p>` : ''}
+                    ${formatEventBudget(event)}
+                    ${event.organizer?.name ? `<p><strong>Organizer:</strong> ${event.organizer.name}</p>` : ''}
                 </div>
             `).join('');
         } else {
@@ -1760,10 +1791,10 @@ async function loadApprovalItemDetails(id, type) {
                 <div class="approval-details">
                     <h4>${item.title}</h4>
                     <p><strong>Description:</strong> ${item.description}</p>
-                    <p><strong>Type:</strong> ${item.type}</p>
-                    <p><strong>Event Date:</strong> ${new Date(item.eventDate).toLocaleDateString()}</p>
-                    <p><strong>Organizer:</strong> ${item.organizer?.name || 'Unknown'}</p>
-                    ${item.budget ? `<p><strong>Budget:</strong> ₹${item.budget.toLocaleString()}</p>` : ''}
+                    <p><strong>Type:</strong> ${formatEventType(item)}</p>
+                    <p><strong>Event Date:</strong> ${formatEventDate(item)}</p>
+                    ${item.organizer?.name ? `<p><strong>Organizer:</strong> ${item.organizer.name}</p>` : ''}
+                    ${formatEventBudget(item)}
                 </div>
             `;
         }
@@ -1781,14 +1812,14 @@ function closeApprovalModal() {
 
 async function handleApprove() {
     if (!currentApprovalItem) return;
-    
+
     const comments = document.getElementById('approvalComments').value;
-    
+
     try {
         if (currentApprovalItem.type === 'club') {
-            await api.approveClub(currentApprovalItem.id, { comments });
+            await api.approveClub(currentApprovalItem.id, { action: 'approve', comments });
         } else if (currentApprovalItem.type === 'event') {
-            await api.approveEvent(currentApprovalItem.id, { comments });
+            await api.approveEvent(currentApprovalItem.id, { action: 'approve', comments });
         }
         
         closeApprovalModal();
@@ -1813,9 +1844,10 @@ async function handleReject() {
     
     try {
         if (currentApprovalItem.type === 'club') {
-            await api.rejectClub(currentApprovalItem.id, { comments });
+            // The backend reuses the /clubs/:id/approve endpoint with action='reject'
+            await api.approveClub(currentApprovalItem.id, { action: 'reject', rejectionReason: comments });
         } else if (currentApprovalItem.type === 'event') {
-            await api.rejectEvent(currentApprovalItem.id, { comments });
+            await api.approveEvent(currentApprovalItem.id, { action: 'reject', rejectionReason: comments });
         }
         
         closeApprovalModal();
