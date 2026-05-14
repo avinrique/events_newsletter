@@ -47,6 +47,20 @@ exports.createUser = async (req, res) => {
             data: user
         });
     } catch (error) {
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+                errors: error.errors
+            });
+        }
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'Duplicate key',
+                field: Object.keys(error.keyPattern || {})[0]
+            });
+        }
         res.status(500).json({
             success: false,
             message: error.message
@@ -217,6 +231,20 @@ exports.updateUser = async (req, res) => {
             data: user
         });
     } catch (error) {
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+                errors: error.errors
+            });
+        }
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'Duplicate key',
+                field: Object.keys(error.keyPattern || {})[0]
+            });
+        }
         res.status(500).json({
             success: false,
             message: error.message

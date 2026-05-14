@@ -15,6 +15,9 @@ if (process.env.NODE_ENV !== 'test') {
     connectDB();
 }
 
+// Ensure upload directories exist on a fresh checkout (side-effect on require)
+require('./middleware/upload');
+
 // Middleware
 app.use(helmet({
     contentSecurityPolicy: {
