@@ -100,6 +100,9 @@ describe('Certificate Management Endpoints', () => {
                 title: 'Student Certificate',
                 issuer: 'Coursera',
                 issueDate: new Date('2023-05-01'),
+                completionDate: new Date('2023-05-01'),
+                owner: testData.users.student._id,
+                ownerType: 'student',
                 uploadedBy: testData.users.student._id,
                 department: testData.department._id,
                 status: 'approved'
@@ -109,6 +112,9 @@ describe('Certificate Management Endpoints', () => {
                 title: 'Teacher Certificate',
                 issuer: 'IEEE',
                 issueDate: new Date('2023-06-01'),
+                completionDate: new Date('2023-06-01'),
+                owner: testData.users.teacher._id,
+                ownerType: 'teacher',
                 uploadedBy: testData.users.teacher._id,
                 department: testData.department._id,
                 status: 'approved'
@@ -151,6 +157,9 @@ describe('Certificate Management Endpoints', () => {
                 title: 'Pending Certificate',
                 issuer: 'Test Issuer',
                 issueDate: new Date(),
+                completionDate: new Date(),
+                owner: testData.users.student._id,
+                ownerType: 'student',
                 uploadedBy: testData.users.student._id,
                 department: testData.department._id,
                 status: 'pending'
@@ -190,7 +199,10 @@ describe('Certificate Management Endpoints', () => {
                 title: 'Test Certificate Details',
                 issuer: 'Test University',
                 issueDate: new Date('2023-05-15'),
+                completionDate: new Date('2023-05-15'),
                 description: 'Detailed certificate description',
+                owner: testData.users.student._id,
+                ownerType: 'student',
                 uploadedBy: testData.users.student._id,
                 department: testData.department._id,
                 status: 'approved'
