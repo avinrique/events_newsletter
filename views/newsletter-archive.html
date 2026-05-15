@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Archive — Department Management System</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .arch-page-header {
+            background: var(--gradient-primary);
+            color: var(--color-text-inverse);
+            padding: var(--space-5) var(--space-7);
+            box-shadow: var(--shadow-sm);
+        }
+        .arch-page-header .brand {
+            display: flex; align-items: center; gap: var(--space-2);
+            color: var(--color-text-inverse);
+            font-weight: 700; font-size: var(--fs-lg); text-decoration: none;
+        }
+        .arch-page-body {
+            max-width: 1180px; margin: 0 auto; padding: var(--space-7) var(--space-6);
+        }
+        .arch-controls {
+            display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap;
+            margin-bottom: var(--space-6);
+        }
+        .arch-controls .form-group { min-width: 260px; margin: 0; }
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-5);
+        }
+        .arch-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+        .arch-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .arch-card .cover {
+            background: linear-gradient(135deg, #6a4c93 0%, #1d3557 100%);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            height: 160px; font-size: 2rem; font-weight: 700;
+            position: relative; overflow: hidden;
+        }
+        .arch-card .cover img { width: 100%; height: 100%; object-fit: cover; }
+        .arch-card .body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+        .arch-card h3 { margin: 0; font-size: var(--fs-md); }
+        .arch-card .meta { font-size: var(--fs-xs); color: var(--color-text-muted); }
+        .arch-card p.summary {
+            margin: 0;
+            color: var(--color-text-secondary);
+            font-size: var(--fs-sm);
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .arch-card a.read-btn {
+            margin-top: auto;
+            display: inline-flex; align-items: center; gap: 6px;
+            color: var(--color-primary); text-decoration: none; font-weight: 600;
+            font-size: var(--fs-sm);
+        }
+        .arch-empty {
+            text-align: center; padding: var(--space-7);
+            color: var(--color-text-muted);
+        }
+        .arch-rss-link { color: var(--color-text-inverse); text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header class="arch-page-header">
+        <a href="/" class="brand">
+            <i class="fas fa-newspaper"></i>
+            <span>Newsletter Archive</span>
+        </a>
+        <p style="margin: var(--space-2) 0 0; color: rgba(255,255,255,.85);">Browse every newsletter published by a department.</p>
+    </header>
+
+    <div class="arch-page-body">
+        <div class="arch-controls">
+            <div class="form-group">
+                <label class="form-label" for="archDept">Department</label>
+                <select id="archDept" class="form-control">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <a href="/newsletter" class="btn btn-secondary">
+                <i class="fas fa-calendar"></i> Generate by month
+            </a>
+            <a id="archRssLink" href="#" style="display:none;" class="btn btn-ghost">
+                <i class="fas fa-rss"></i> RSS
+            </a>
+        </div>
+
+        <div id="archGrid" class="arch-grid">
+            <p class="arch-empty">Choose a department to see its archive.</p>
+        </div>
+    </div>
+
+    <script src="/js/ui.js"></script>
+    <script>
+        (async function () {
+            const grid = document.getElementById('archGrid');
+            const sel  = document.getElementById('archDept');
+
+            // Load departments.
+            try {
+                const r = await fetch('/newsletter/api/departments/public').then(x => x.json());
+                (r.data || []).forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d._id;
+                    opt.textContent = d.name;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                grid.innerHTML = `<p class="arch-empty">Could not load departments.</p>`;
+                return;
+            }
+
+            // Pre-select via ?deptId=
+            const params = new URLSearchParams(location.search);
+            const initial = params.get('deptId');
+            if (initial) {
+                sel.value = initial;
+                render(initial);
+            }
+
+            sel.addEventListener('change', () => {
+                const v = sel.value;
+                const rss = document.getElementById('archRssLink');
+                if (!v) {
+                    grid.innerHTML = `<p class="arch-empty">Choose a department to see its archive.</p>`;
+                    history.replaceState({}, '', '/newsletter/archive');
+                    rss.style.display = 'none';
+                    return;
+                }
+                history.replaceState({}, '', `/newsletter/archive?deptId=${v}`);
+                rss.href = `/newsletter/rss/${v}`;
+                rss.style.display = 'inline-flex';
+                render(v);
+            });
+
+            // If initial deptId was set in URL, show RSS link.
+            if (initial) {
+                const rss = document.getElementById('archRssLink');
+                rss.href = `/newsletter/rss/${initial}`;
+                rss.style.display = 'inline-flex';
+            }
+
+            async function render(deptId) {
+                grid.innerHTML = `<p class="arch-empty">Loading…</p>`;
+                try {
+                    const r = await fetch(`/api/newsletters/published?deptId=${encodeURIComponent(deptId)}`).then(x => x.json());
+                    const items = r.data || [];
+                    if (!items.length) {
+                        grid.innerHTML = `<p class="arch-empty">No published newsletters yet for this department.</p>`;
+                        return;
+                    }
+                    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                    grid.innerHTML = items.map(n => {
+                        const author = n.publishedBy?.name || '';
+                        const pub    = n.publishedAt ? new Date(n.publishedAt).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '';
+                        const monthLabel = `${months[n.month] || ''} ${n.year || ''}`.trim();
+                        const cover  = n.coverImage
+                            ? `<div class="cover"><img src="${UI.escapeHtml(n.coverImage)}" alt="${UI.escapeHtml(n.title)}"></div>`
+                            : `<div class="cover">${UI.escapeHtml(monthLabel)}</div>`;
+                        const summary = n.summary ? `<p class="summary">${UI.escapeHtml(n.summary)}</p>` : '';
+                        return `
+                            <article class="arch-card">
+                                ${cover}
+                                <div class="body">
+                                    <h3>${UI.escapeHtml(n.title)}</h3>
+                                    <div class="meta">${UI.escapeHtml(monthLabel)}${author ? ' · By ' + UI.escapeHtml(author) : ''}${pub ? ' · ' + UI.escapeHtml(pub) : ''}</div>
+                                    ${summary}
+                                    <a class="read-btn" href="/newsletter?dept=${n.department._id}&month=${n.month}&year=${n.year}">Read <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </article>
+                        `;
+                    }).join('');
+                } catch (e) {
+                    grid.innerHTML = `<p class="arch-empty">Could not load newsletters.</p>`;
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

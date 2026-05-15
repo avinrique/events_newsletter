@@ -10,7 +10,8 @@ const UPLOAD_DIRS = [
     'uploads/internships',
     'uploads/profiles',
     'uploads/projects',
-    'uploads/teacher-events'
+    'uploads/teacher-events',
+    'uploads/newsletters'
 ];
 
 UPLOAD_DIRS.forEach(dir => {

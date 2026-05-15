@@ -341,6 +341,22 @@ class API {
     async updateNewsletter(id, d)  { return this.request(`/newsletters/${id}`, { method: 'PUT', body: d }); }
     async publishNewsletter(id)    { return this.request(`/newsletters/${id}/publish`, { method: 'PUT' }); }
     async deleteNewsletter(id)     { return this.request(`/newsletters/${id}`, { method: 'DELETE' }); }
+    async uploadNewsletterCover(id, formData) {
+        return this.request(`/newsletters/${id}/cover`, {
+            method: 'POST',
+            body: formData,
+            headers: {} // let browser set multipart boundary
+        });
+    }
+    async newsletterDraftPreview(deptId, year, month) {
+        return this.request(`/newsletters/draft-preview/${deptId}/${year}/${month}`);
+    }
+    async listPublishedNewsletters(deptId) {
+        return this.request(`/newsletters/published?deptId=${encodeURIComponent(deptId)}`);
+    }
+    async sendNewsletter(id) {
+        return this.request(`/newsletters/${id}/send`, { method: 'POST' });
+    }
 
     // Budgets aggregation
     async getDepartmentBudgets(deptId, params = {}) {

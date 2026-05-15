@@ -67,13 +67,64 @@
             body { background: white !important; }
             .newsletter-page-body { padding: 0; max-width: none; }
         }
+
+        /* ---------------- Curated newsletter (HOD-composed) ---------------- */
+        .curated-newsletter {
+            background: #fffaf3;
+            color: #222;
+            padding: 3rem 3.5rem;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.65;
+            border-radius: var(--radius-md);
+            box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+        }
+        .curated-cover img {
+            display: block;
+            width: 100%;
+            max-height: 320px;
+            object-fit: cover;
+            margin: -3rem -3.5rem 2.5rem;
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+        }
+        .curated-rainbow {
+            height: 4px;
+            background: linear-gradient(90deg, #d62828 0%, #e09e2c 25%, #588157 50%, #1d3557 75%, #6a4c93 100%);
+            margin-bottom: 1.25rem;
+            border-radius: 2px;
+        }
+        .curated-masthead { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 1.25rem; margin-bottom: 2rem; }
+        .curated-title { font-size: 2.4rem; margin: 0 0 .35rem; font-weight: 700; letter-spacing: .02em; }
+        .curated-subtitle { margin: 0; color: #444; font-style: italic; }
+        .curated-byline { margin: .25rem 0 0; color: #666; font-size: .9rem; }
+        .curated-summary { margin: 1rem auto 0; max-width: 720px; color: #333; font-size: 1.05rem; }
+        .curated-section { margin: 2rem 0; }
+        .curated-section-heading {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0 0 .6rem;
+            padding-bottom: .25rem;
+            border-bottom: 1px solid #ccc;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+        .curated-section-body { font-size: 1rem; }
+        .curated-section-body ul, .curated-section-body ol { padding-left: 1.4em; }
+        .curated-section-body a { color: #1d3557; text-decoration: underline; }
+        @media (max-width: 720px) {
+            .curated-newsletter { padding: 1.5rem; }
+            .curated-cover img  { margin: -1.5rem -1.5rem 1.5rem; max-height: 200px; }
+            .curated-title      { font-size: 1.6rem; }
+        }
     </style>
 </head>
 <body>
-    <header class="newsletter-page-header">
+    <header class="newsletter-page-header" style="display:flex;justify-content:space-between;align-items:center;">
         <a href="/" class="brand">
             <i class="fas fa-newspaper"></i>
             Department Newsletter
+        </a>
+        <a href="/newsletter/archive" style="color:#fff;text-decoration:underline;font-weight:500;">
+            <i class="fas fa-book"></i> Browse all past issues
         </a>
     </header>
 
@@ -150,10 +201,76 @@
         </div>
 
         <div id="newsletterContent"></div>
+
+        <!-- Subscribe form (Phase 3.2) -->
+        <section class="newsletter-subscribe" style="margin-top: var(--space-7); padding: var(--space-5) var(--space-6); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <h3 style="margin: 0 0 var(--space-2); display:flex; align-items:center; gap:.5rem;">
+                <i class="fas fa-envelope-open-text"></i> Subscribe to updates
+            </h3>
+            <p class="t-text-muted" style="margin: 0 0 var(--space-3);">Get the next published newsletter delivered to your inbox.</p>
+            <form id="subscribeForm" style="display:flex; gap: var(--space-3); flex-wrap: wrap; align-items: flex-end;">
+                <div class="form-group" style="margin: 0; min-width: 200px;">
+                    <label class="form-label" for="subDept">Department</label>
+                    <select id="subDept" class="form-control" required>
+                        <option value="">Select Department</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0; min-width: 220px; flex: 1;">
+                    <label class="form-label" for="subEmail">Email</label>
+                    <input type="email" id="subEmail" class="form-control" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group" style="margin: 0; min-width: 180px;">
+                    <label class="form-label" for="subName">Name (optional)</label>
+                    <input type="text" id="subName" class="form-control" placeholder="Full name">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Subscribe</button>
+            </form>
+            <p id="subscribeMessage" class="t-text-muted" style="margin: var(--space-3) 0 0; font-size:.9rem;"></p>
+        </section>
     </div>
 
     <script src="/js/ui.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/newsletter.js"></script>
+    <script>
+        // Subscribe form (uses public endpoints — no auth).
+        (async function () {
+            const sel = document.getElementById('subDept');
+            const main = document.getElementById('department');
+            // Mirror the main department dropdown when ready.
+            const sync = () => {
+                if (main && main.options.length) {
+                    sel.innerHTML = main.innerHTML;
+                }
+            };
+            const t = setInterval(() => { sync(); if (main?.options?.length > 1) clearInterval(t); }, 200);
+
+            document.getElementById('subscribeForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const msg = document.getElementById('subscribeMessage');
+                const payload = {
+                    email: document.getElementById('subEmail').value.trim(),
+                    department: document.getElementById('subDept').value,
+                    name: document.getElementById('subName').value.trim()
+                };
+                if (!payload.email || !payload.department) {
+                    msg.textContent = 'Pick a department and enter your email.';
+                    return;
+                }
+                msg.textContent = 'Subscribing…';
+                try {
+                    const r = await fetch('/api/newsletters/subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).then(x => x.json());
+                    msg.textContent = r.message || (r.success ? 'Subscribed!' : 'Failed.');
+                    if (r.success) e.target.reset();
+                } catch (err) {
+                    msg.textContent = 'Could not subscribe: ' + err.message;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -141,6 +141,8 @@ if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
+    // Newsletter scheduler — auto-publishes drafts whose scheduledFor is past.
+    require('./scheduler').start();
 }
 
 module.exports = app;

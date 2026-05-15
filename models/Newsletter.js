@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const sectionSchema = new mongoose.Schema({
     heading: { type: String, required: true, trim: true, maxlength: 200 },
-    body:    { type: String, required: true, maxlength: 8000 },
+    // Rich-text HTML; bumped from 8000 → 20000 so the in-browser editor can store inline markup.
+    body:    { type: String, required: true, maxlength: 20000 },
     order:   { type: Number, default: 0 }
 }, { _id: false });
 
@@ -52,7 +53,11 @@ const newsletterSchema = new mongoose.Schema({
         required: true
     },
     publishedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    publishedAt: Date
+    publishedAt: Date,
+    // Phase 3 distribution metadata.
+    lastSentAt: Date,
+    sentCount: { type: Number, default: 0 },
+    scheduledFor: Date
 }, {
     timestamps: true
 });

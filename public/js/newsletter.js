@@ -74,43 +74,82 @@ async function handleFormSubmit(e) {
 
 async function generateNewsletter(departmentId, month, year) {
     try {
-        // Fetch teacher events for the department - using newsletter route
-        const response = await fetch(`/newsletter/api/teacher-events/public/${departmentId}/${month}/${year}`);
+        // Prefer the curated newsletter; the endpoint falls back to auto-generated when none exists.
+        const response = await fetch(`/api/newsletters/published/${departmentId}/${year}/${month}`);
         const data = await response.json();
-        
+
         if (!data.success) {
-            throw new Error(data.message || 'Failed to fetch events');
+            throw new Error(data.message || 'Failed to fetch newsletter');
         }
-        
-        const events = data.data || [];
-        const departmentName = data.departmentName || 'Department';
-        
-        // Generate newsletter HTML using the same logic as HOD
-        const startDate = new Date(year, month, 1);
-        const endDate = new Date(year, month + 1, 0);
-        
-        const newsletterHTML = generateTeacherEventsNewsletter(events, departmentName, startDate, endDate);
-        
+
+        let newsletterHTML;
+        let departmentName;
+
+        if (data.source === 'curated') {
+            const n = data.data;
+            departmentName = n.department?.name || 'Department';
+            newsletterHTML = generateCuratedNewsletter(n);
+        } else {
+            // auto-generated fallback (teacher events feed)
+            const events = data.data?.teacherEvents || [];
+            departmentName = data.data?.department?.name || 'Department';
+            const startDate = new Date(year, month, 1);
+            const endDate   = new Date(year, month + 1, 0);
+            newsletterHTML  = generateTeacherEventsNewsletter(events, departmentName, startDate, endDate);
+        }
+
         // Display newsletter
         document.getElementById('newsletterContent').innerHTML = newsletterHTML;
         document.getElementById('newsletterActions').style.display = 'block';
-        
-        // Store current newsletter data
-        currentNewsletter = {
-            departmentId,
-            departmentName,
-            month,
-            year,
-            html: newsletterHTML
-        };
-        
-        // Scroll to newsletter
+
+        currentNewsletter = { departmentId, departmentName, month, year, html: newsletterHTML };
         document.getElementById('newsletterContent').scrollIntoView({ behavior: 'smooth' });
-        
+
     } catch (error) {
         console.error('Error:', error);
         throw error;
     }
+}
+
+// Render an HOD-composed (curated) newsletter: cover + masthead + byline + sections.
+function generateCuratedNewsletter(n) {
+    const escape = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const monthLabel = months[n.month] || '';
+    const yearLabel  = n.year || '';
+    const author = n.publishedBy?.name || n.createdBy?.name || '';
+    const publishedAt = n.publishedAt ? new Date(n.publishedAt).toLocaleDateString(undefined, { dateStyle: 'long' }) : '';
+    const dept = n.department?.name || '';
+
+    const sectionsHtml = (n.sections || [])
+        .slice()
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(s => `
+            <section class="curated-section">
+                <h2 class="curated-section-heading">${escape(s.heading)}</h2>
+                <div class="curated-section-body">${s.body || ''}</div>
+            </section>
+        `).join('');
+
+    const coverHtml = n.coverImage
+        ? `<div class="curated-cover"><img src="${escape(n.coverImage)}" alt="Cover image"></div>`
+        : '';
+
+    return `
+        <div class="curated-newsletter">
+            ${coverHtml}
+            <header class="curated-masthead">
+                <div class="curated-rainbow"></div>
+                <h1 class="curated-title">${escape(n.title)}</h1>
+                <p class="curated-subtitle">${escape(dept)} · ${escape(monthLabel)} ${escape(yearLabel)}</p>
+                ${author || publishedAt ? `<p class="curated-byline">${author ? 'By ' + escape(author) : ''}${author && publishedAt ? ' · ' : ''}${publishedAt ? 'Published ' + escape(publishedAt) : ''}</p>` : ''}
+                ${n.summary ? `<p class="curated-summary">${escape(n.summary)}</p>` : ''}
+            </header>
+            ${sectionsHtml || '<p class="t-text-muted" style="text-align:center;padding:2rem;">No sections published yet.</p>'}
+        </div>
+    `;
 }
 
 // Exact same newsletter generation logic as HOD version

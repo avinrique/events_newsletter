@@ -3392,26 +3392,35 @@ async function loadNewsletters() {
             return;
         }
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        list.innerHTML = items.map(n => `
+        list.innerHTML = items.map(n => {
+            const authorName = n.publishedBy?.name || n.createdBy?.name || '';
+            const dateText   = n.publishedAt
+                ? `Published ${new Date(n.publishedAt).toLocaleDateString()}`
+                : `Drafted ${new Date(n.updatedAt || n.createdAt).toLocaleDateString()}`;
+            return `
             <div class="data-card">
                 <div class="card-header">
                     <div>
                         <h4 class="card-title">${UI.escapeHtml(n.title)}</h4>
                         <p class="card-subtitle">${months[n.month]} ${n.year} · ${UI.escapeHtml(n.department?.name || '')}</p>
+                        ${authorName ? `<p class="card-subtitle t-text-muted" style="font-size:.8rem;margin-top:.15rem;">By ${UI.escapeHtml(authorName)} · ${dateText}</p>` : ''}
                     </div>
                     <div>${UI.statusBadge(n.status)}</div>
                 </div>
+                ${n.coverImage ? `<img src="${UI.escapeHtml(n.coverImage)}" alt="" style="width:100%;max-height:120px;object-fit:cover;border-radius:var(--radius-sm);margin:.5rem 0;">` : ''}
                 ${n.summary ? `<p>${UI.escapeHtml(n.summary)}</p>` : ''}
                 ${n.sections?.length ? `<p class="t-text-muted" style="font-size:.85rem">${n.sections.length} section${n.sections.length === 1 ? '' : 's'}</p>` : ''}
                 <div class="card-actions">
                     ${n.status === 'draft'
                         ? `<button class="btn btn-secondary btn-sm" data-newsletter-edit="${n._id}"><i class="fas fa-pen"></i> Edit</button>
                            <button class="btn btn-primary btn-sm" data-newsletter-publish="${n._id}"><i class="fas fa-paper-plane"></i> Publish</button>`
-                        : `<a href="/newsletter?dept=${n.department._id}&month=${n.month}&year=${n.year}" target="_blank" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> View public</a>`}
+                        : `<a href="/newsletter?dept=${n.department._id}&month=${n.month}&year=${n.year}" target="_blank" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> View public</a>
+                           <button class="btn btn-primary btn-sm" data-newsletter-send="${n._id}"><i class="fas fa-envelope"></i> Send to Subscribers${n.sentCount ? ` (sent ${n.sentCount})` : ''}</button>`}
                     <button class="btn btn-ghost btn-sm" data-newsletter-delete="${n._id}"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
         bindNewsletterButtons(list);
     } catch (e) {
         list.innerHTML = `<p class="form-error">${UI.escapeHtml(e.message)}</p>`;
@@ -3435,69 +3444,188 @@ function bindNewsletterButtons(root) {
         try { await api.deleteNewsletter(b.dataset.newsletterDelete); UI.toast('Deleted', 'success'); loadNewsletters(); }
         catch (e) { UI.toast('Failed: ' + e.message, 'error'); }
     }));
+    root.querySelectorAll('[data-newsletter-send]').forEach(b => b.addEventListener('click', async () => {
+        const ok = await UI.confirm({
+            title: 'Send to subscribers?',
+            message: 'This emails the newsletter to all active subscribers + active members of the department. SMTP must be configured in .env to actually deliver.',
+            confirmText: 'Send'
+        });
+        if (!ok) return;
+        try {
+            const r = await api.sendNewsletter(b.dataset.newsletterSend);
+            UI.toast(r.message || 'Sent', 'success');
+            loadNewsletters();
+        } catch (e) { UI.toast('Send failed: ' + e.message, 'error'); }
+    }));
 }
 
 async function openNewsletterEditor(id) {
-    let n;
     try {
         const res = await api.getNewsletter(id);
-        n = res.data;
-    } catch (e) { UI.toast('Failed to load: ' + e.message, 'error'); return; }
-
-    const sectionsJson = JSON.stringify(n.sections || [], null, 2);
-    const result = await UI.prompt({
-        title: 'Edit Newsletter',
-        description: `${n.department?.name || ''} — ${new Date(n.year, n.month, 1).toLocaleString('default', { month:'long', year:'numeric' })}`,
-        submitText: 'Save draft',
-        fields: [
-            { name: 'title',    label: 'Title', value: n.title, required: true },
-            { name: 'summary',  label: 'Summary', type: 'textarea', value: n.summary || '' },
-            { name: 'sections', label: 'Sections (JSON)', type: 'textarea', value: sectionsJson, hint: 'Array of {heading, body, order}. JSON.' }
-        ]
-    });
-    if (!result) return;
-    let sections = [];
-    try { sections = JSON.parse(result.sections || '[]'); }
-    catch (e) { UI.toast('Sections is not valid JSON', 'error'); return; }
-    try {
-        await api.updateNewsletter(id, {
-            title: result.title.trim(),
-            summary: (result.summary || '').trim(),
-            sections
-        });
-        UI.toast('Saved', 'success');
-        loadNewsletters();
-    } catch (e) {
-        UI.toast('Save failed: ' + e.message, 'error');
-    }
+        return openNewsletterModal('edit', res.data);
+    } catch (e) { UI.toast('Failed to load: ' + e.message, 'error'); }
 }
 
 async function openCreateNewsletter() {
     const now = new Date();
-    const result = await UI.prompt({
-        title: 'New Newsletter',
-        submitText: 'Create draft',
-        fields: [
-            { name: 'title', label: 'Title', placeholder: 'e.g. ISE Newsletter — May 2026', required: true },
-            { name: 'month', label: 'Month (0–11)', type: 'number', value: now.getMonth(), min: 0, max: 11, required: true },
-            { name: 'year', label: 'Year', type: 'number', value: now.getFullYear(), min: 2020, max: 2040, required: true },
-            { name: 'summary', label: 'Summary', type: 'textarea' }
-        ]
+    return openNewsletterModal('create', {
+        title: '',
+        month: now.getMonth(),
+        year: now.getFullYear(),
+        summary: '',
+        sections: [],
+        coverImage: ''
     });
-    if (!result) return;
-    try {
-        await api.createNewsletter({
-            title: result.title.trim(),
-            month: Number(result.month),
-            year: Number(result.year),
-            summary: (result.summary || '').trim(),
-            sections: []
-        });
-        UI.toast('Newsletter draft created', 'success');
-        loadNewsletters();
-    } catch (e) {
-        UI.toast('Create failed: ' + e.message, 'error');
-    }
+}
+
+/**
+ * Unified create/edit modal. Mode is 'create' or 'edit'.
+ * Builds a custom modal with: title, month/year (create only), summary,
+ * cover image upload, and a section builder (rich-text bodies).
+ */
+function openNewsletterModal(mode, n) {
+    const isEdit = mode === 'edit';
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    // Build the modal scaffolding.
+    const id = '__newsletterModal_' + Date.now();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal show';
+    overlay.id = id;
+    overlay.innerHTML = `
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">${isEdit ? 'Edit Newsletter' : 'New Newsletter'}</h3>
+                <button class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
+                ${isEdit ? `<p class="t-text-muted">${UI.escapeHtml(n.department?.name || '')} — ${months[n.month]} ${n.year}</p>` : ''}
+                <form id="${id}_form" class="modal-form" autocomplete="off">
+                    <div class="form-group">
+                        <label class="form-label">Title <span class="required">*</span></label>
+                        <input name="title" required class="form-control" placeholder="e.g. ISE Newsletter — May 2026" value="${UI.escapeHtml(n.title || '')}">
+                    </div>
+                    ${isEdit ? '' : `
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">
+                        <div class="form-group">
+                            <label class="form-label">Month <span class="required">*</span></label>
+                            <select name="month" required>
+                                ${months.map((m, i) => `<option value="${i}" ${i === n.month ? 'selected' : ''}>${m}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Year <span class="required">*</span></label>
+                            <input name="year" type="number" min="2020" max="2040" required value="${n.year}">
+                        </div>
+                    </div>`}
+                    <div class="form-group">
+                        <label class="form-label">Summary</label>
+                        <textarea name="summary" rows="2" placeholder="A short standfirst that appears under the masthead.">${UI.escapeHtml(n.summary || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cover image</label>
+                        <input type="file" name="coverImage" accept="image/*">
+                        ${n.coverImage ? `<img class="nl-cover-preview" src="${UI.escapeHtml(n.coverImage)}" alt="Current cover">` : ''}
+                        <small class="form-hint">Optional. Shows at the top of the published newsletter. Max 5 MB.</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Schedule publish (optional)</label>
+                        <input type="datetime-local" name="scheduledFor" value="${n.scheduledFor ? new Date(n.scheduledFor).toISOString().slice(0,16) : ''}">
+                        <small class="form-hint">If set, the draft auto-publishes at this time. Leave blank for manual publish.</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+                            <span>Sections</span>
+                            <button type="button" class="btn btn-ghost btn-sm" data-act="autofill" title="Drop in events / projects / clubs / certificates / internships / new faculty from the chosen month">
+                                <i class="fas fa-magic"></i> Auto-fill from this month's activity
+                            </button>
+                        </label>
+                        <div class="nl-section-host"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-act="cancel">Cancel</button>
+                <button type="submit" form="${id}_form" class="btn btn-primary" data-act="save">${isEdit ? 'Save draft' : 'Create draft'}</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    const sectionHost = overlay.querySelector('.nl-section-host');
+    const editor = NewsletterSectionEditor.mount(sectionHost, n.sections || []);
+
+    // Auto-fill from this month's department activity (Phase 2.2).
+    overlay.querySelector('[data-act="autofill"]')?.addEventListener('click', async () => {
+        const form = overlay.querySelector('form');
+        const fd = new FormData(form);
+        const monthVal = isEdit ? n.month : Number(fd.get('month'));
+        const yearVal  = isEdit ? n.year  : Number(fd.get('year'));
+        const deptId = n.department?._id || currentUser?.department?._id || currentUser?.department;
+        if (!deptId) { UI.toast('Could not determine department', 'error'); return; }
+        try {
+            const res = await api.newsletterDraftPreview(deptId, yearVal, monthVal);
+            const newSections = res.data?.sections || [];
+            if (!newSections.length) {
+                UI.toast('No activity to auto-fill from this month.', 'info');
+                return;
+            }
+            const existing = editor.getSections();
+            editor.replaceAll([...existing, ...newSections.map((s, i) => ({ ...s, order: existing.length + i }))]);
+            UI.toast(`Added ${newSections.length} section${newSections.length === 1 ? '' : 's'} from ${res.data?.department?.name || 'this month'}'s activity`, 'success');
+        } catch (err) {
+            UI.toast('Auto-fill failed: ' + err.message, 'error');
+        }
+    });
+
+    const close = () => {
+        overlay.remove();
+        document.body.style.overflow = '';
+    };
+    overlay.querySelector('.modal-close').addEventListener('click', close);
+    overlay.querySelector('[data-act="cancel"]').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    overlay.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const scheduledForRaw = (fd.get('scheduledFor') || '').toString();
+        const payload = {
+            title: (fd.get('title') || '').toString().trim(),
+            summary: (fd.get('summary') || '').toString().trim(),
+            sections: editor.getSections(),
+            scheduledFor: scheduledForRaw ? new Date(scheduledForRaw).toISOString() : null
+        };
+        if (!isEdit) {
+            payload.month = Number(fd.get('month'));
+            payload.year  = Number(fd.get('year'));
+        }
+        const coverFile = fd.get('coverImage');
+        const hasCoverFile = coverFile && coverFile.size > 0;
+
+        try {
+            let docId = n._id;
+            if (isEdit) {
+                await api.updateNewsletter(docId, payload);
+            } else {
+                const res = await api.createNewsletter(payload);
+                docId = res.data?._id;
+            }
+            if (hasCoverFile && docId) {
+                const coverForm = new FormData();
+                coverForm.append('coverImage', coverFile);
+                await api.uploadNewsletterCover(docId, coverForm);
+            }
+            UI.toast(isEdit ? 'Saved' : 'Newsletter draft created', 'success');
+            close();
+            loadNewsletters();
+        } catch (err) {
+            UI.toast((isEdit ? 'Save' : 'Create') + ' failed: ' + err.message, 'error');
+        }
+    });
+
+    setTimeout(() => overlay.querySelector('input[name="title"]')?.focus(), 50);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
