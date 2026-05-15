@@ -307,7 +307,7 @@ exports.getPublishedNewsletter = async (req, res) => {
             year: Number(year),
             month: Number(month),
             status: 'published'
-        }));
+        }).sort({ publishedAt: -1 }));
 
         if (n) {
             return res.status(200).json({ success: true, source: 'curated', data: n });
