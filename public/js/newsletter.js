@@ -126,12 +126,15 @@ function generateCuratedNewsletter(n) {
     const sectionsHtml = (n.sections || [])
         .slice()
         .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map(s => `
-            <section class="curated-section">
-                <h2 class="curated-section-heading">${escape(s.heading)}</h2>
-                <div class="curated-section-body">${s.body || ''}</div>
-            </section>
-        `).join('');
+        .map(s => {
+            const isEvents = /^events\b/i.test(s.heading) || /<article class="nl-article"/.test(s.body || '');
+            return `
+                <section class="curated-section${isEvents ? ' curated-section--events' : ''}">
+                    <h2 class="curated-section-heading">${escape(s.heading)}</h2>
+                    <div class="curated-section-body">${s.body || ''}</div>
+                </section>
+            `;
+        }).join('');
 
     const coverHtml = n.coverImage
         ? `<div class="curated-cover"><img src="${escape(n.coverImage)}" alt="Cover image"></div>`

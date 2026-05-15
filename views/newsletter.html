@@ -68,68 +68,180 @@
             .newsletter-page-body { padding: 0; max-width: none; }
         }
 
-        /* ---------------- Curated newsletter (HOD-composed) ---------------- */
+        /* ---------------- Curated newsletter — newspaper style ---------------- */
         .curated-newsletter {
             background: #fffaf3;
-            color: #222;
+            color: #1a1a1a;
             padding: 3rem 3.5rem;
             font-family: 'Georgia', 'Times New Roman', serif;
-            line-height: 1.65;
+            line-height: 1.6;
             border-radius: var(--radius-md);
             box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+            max-width: 980px;
+            margin: 0 auto;
         }
         .curated-cover img {
             display: block;
-            width: 100%;
+            width: calc(100% + 7rem);
             max-height: 320px;
             object-fit: cover;
             margin: -3rem -3.5rem 2.5rem;
             border-radius: var(--radius-md) var(--radius-md) 0 0;
         }
-        /* Curated newsletter has its own light "newspaper" theme — override the
-           site-wide dark theme's heading colors so the title doesn't ghost out. */
-        .curated-newsletter h1,
-        .curated-newsletter h2,
-        .curated-newsletter h3,
-        .curated-newsletter h4,
-        .curated-newsletter h5,
-        .curated-newsletter h6,
-        .curated-newsletter p,
-        .curated-newsletter li,
-        .curated-newsletter strong,
-        .curated-newsletter em { color: #1a1a1a; }
+        /* Site theme is dark; force every text node in the curated card to ink-black. */
+        .curated-newsletter,
+        .curated-newsletter * { color: #1a1a1a; }
         .curated-newsletter .curated-byline,
-        .curated-newsletter .curated-subtitle { color: #555; }
-        .curated-newsletter .curated-section-heading { color: #1a1a1a; }
+        .curated-newsletter .curated-subtitle,
+        .curated-newsletter .nl-dateline { color: #5a5a5a; }
         .curated-newsletter .curated-summary { color: #333; }
+        .curated-newsletter a { color: #1d3557; text-decoration: underline; }
+
+        /* MASTHEAD */
         .curated-rainbow {
-            height: 4px;
-            background: linear-gradient(90deg, #d62828 0%, #e09e2c 25%, #588157 50%, #1d3557 75%, #6a4c93 100%);
-            margin-bottom: 1.25rem;
-            border-radius: 2px;
+            height: 3px;
+            background: #1a1a1a;
+            margin-bottom: 1rem;
+            position: relative;
         }
-        .curated-masthead { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 1.25rem; margin-bottom: 2rem; }
-        .curated-title { font-size: 2.4rem; margin: 0 0 .35rem; font-weight: 700; letter-spacing: .02em; }
-        .curated-subtitle { margin: 0; color: #444; font-style: italic; }
-        .curated-byline { margin: .25rem 0 0; color: #666; font-size: .9rem; }
-        .curated-summary { margin: 1rem auto 0; max-width: 720px; color: #333; font-size: 1.05rem; }
-        .curated-section { margin: 2rem 0; }
-        .curated-section-heading {
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin: 0 0 .6rem;
-            padding-bottom: .25rem;
-            border-bottom: 1px solid #ccc;
+        .curated-rainbow::after {
+            content: ''; position: absolute; left: 0; right: 0; top: 6px;
+            height: 1px; background: #1a1a1a;
+        }
+        .curated-masthead {
+            text-align: center;
+            border-bottom: 3px double #1a1a1a;
+            padding-bottom: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .curated-title {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 3rem;
+            margin: 0 0 .5rem;
+            font-weight: 900;
+            letter-spacing: -.01em;
+            line-height: 1.05;
+        }
+        .curated-subtitle {
+            margin: 0;
+            font-style: italic;
+            font-size: 1.05rem;
+            letter-spacing: .04em;
             text-transform: uppercase;
-            letter-spacing: .03em;
         }
-        .curated-section-body { font-size: 1rem; }
-        .curated-section-body ul, .curated-section-body ol { padding-left: 1.4em; }
-        .curated-section-body a { color: #1d3557; text-decoration: underline; }
+        .curated-byline {
+            margin: .35rem 0 0;
+            font-size: .85rem;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+        }
+        .curated-summary {
+            margin: 1.25rem auto 0;
+            max-width: 680px;
+            font-size: 1.1rem;
+            font-style: italic;
+            text-align: center;
+            line-height: 1.55;
+        }
+
+        /* SECTION HEADERS — "Style section" newspaper look */
+        .curated-section { margin: 2.5rem 0; }
+        .curated-section-heading {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 1rem;
+            padding: .35rem 0;
+            border-top: 2px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
+            text-transform: uppercase;
+            letter-spacing: .25em;
+            text-align: center;
+        }
+
+        /* EVENT ARTICLE BLOCKS — image figure + headline + dateline + body */
+        .nl-article {
+            margin: 0 0 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px dashed #c8b89a;
+        }
+        .nl-article:last-child { border-bottom: 0; padding-bottom: 0; }
+        .nl-figure {
+            float: right;
+            width: 45%;
+            margin: 0 0 .75rem 1.25rem;
+            padding: 0;
+        }
+        .nl-figure img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 1px solid #1a1a1a;
+            filter: grayscale(.15) contrast(1.05);
+        }
+        .nl-figure figcaption {
+            font-size: .78rem;
+            font-style: italic;
+            text-align: center;
+            margin-top: .35rem;
+            color: #555;
+            letter-spacing: .02em;
+        }
+        .nl-headline {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 .25rem;
+            line-height: 1.15;
+            letter-spacing: -.005em;
+        }
+        .nl-dateline {
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin: 0 0 .6rem;
+        }
+        .nl-body {
+            margin: 0;
+            text-align: justify;
+            hyphens: auto;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        /* Drop-cap on the first article's body — Sunday-paper touch */
+        .curated-section .nl-article:first-of-type .nl-body::first-letter {
+            float: left;
+            font-size: 3.4rem;
+            line-height: .85;
+            padding: .2rem .55rem 0 0;
+            font-weight: 900;
+        }
+        .nl-article::after { content: ''; display: block; clear: both; }
+
+        /* Generic section body fallback (list-style sections like clubs, certs, faculty) */
+        .curated-section-body {
+            font-size: 1rem;
+            column-count: 2;
+            column-gap: 2rem;
+            column-rule: 1px solid #e8dcc0;
+        }
+        .curated-section-body p,
+        .curated-section-body ul,
+        .curated-section-body ol {
+            break-inside: avoid;
+            margin: 0 0 .85rem;
+        }
+        .curated-section-body ul,
+        .curated-section-body ol { padding-left: 1.2em; }
+        .curated-section-body li { margin: .25rem 0; }
+        /* Events section already has its own article layout — disable columns there. */
+        .curated-section--events .curated-section-body { column-count: 1; }
+
         @media (max-width: 720px) {
             .curated-newsletter { padding: 1.5rem; }
-            .curated-cover img  { margin: -1.5rem -1.5rem 1.5rem; max-height: 200px; }
-            .curated-title      { font-size: 1.6rem; }
+            .curated-cover img  { margin: -1.5rem -1.5rem 1.5rem; width: calc(100% + 3rem); max-height: 200px; }
+            .curated-title      { font-size: 1.9rem; }
+            .nl-figure          { float: none; width: 100%; margin: 0 0 .75rem; }
+            .curated-section-body { column-count: 1; }
         }
     </style>
 </head>

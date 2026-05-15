@@ -362,11 +362,38 @@ exports.draftPreview = async (req, res) => {
         const monthLabel = agg.range.startDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
         if (agg.events.length || agg.teacherEvents.length) {
-            const items = [
-                ...agg.events.map(e => `<li><strong>${escape(e.title)}</strong> — ${escape(new Date(e.eventDate).toLocaleDateString())}${e.venue ? ` · ${escape(e.venue)}` : ''}${e.description ? `<br><em>${escape(e.description)}</em>` : ''}</li>`),
-                ...agg.teacherEvents.map(e => `<li><strong>${escape(e.title)}</strong> — ${escape(new Date(e.eventDate).toLocaleDateString())} · faculty event by ${escape(e.createdBy?.name || '—')}</li>`)
+            // Each event becomes a news article block with its first image as a figure.
+            const articleHTML = (title, dateStr, byline, description, imageUrl, imageAlt) => {
+                const fig = imageUrl
+                    ? `<figure class="nl-figure"><img src="${escape(imageUrl)}" alt="${escape(imageAlt || title)}"><figcaption>${escape(title)}</figcaption></figure>`
+                    : '';
+                return `<article class="nl-article">
+                    ${fig}
+                    <h3 class="nl-headline">${escape(title)}</h3>
+                    <p class="nl-dateline">${escape(dateStr)}${byline ? ' · ' + escape(byline) : ''}</p>
+                    ${description ? `<p class="nl-body">${escape(description)}</p>` : ''}
+                </article>`;
+            };
+
+            const blocks = [
+                ...agg.teacherEvents.map(e => articleHTML(
+                    e.title,
+                    new Date(e.eventDate).toLocaleDateString(),
+                    `Faculty event by ${e.createdBy?.name || '—'}`,
+                    e.description,
+                    e.images?.[0]?.fileUrl,
+                    e.title
+                )),
+                ...agg.events.map(e => articleHTML(
+                    e.title,
+                    new Date(e.eventDate).toLocaleDateString() + (e.venue ? ` · ${e.venue}` : ''),
+                    e.club?.name ? `Hosted by ${e.club.name}` : '',
+                    e.description,
+                    e.poster || e.images?.[0]?.fileUrl,
+                    e.title
+                ))
             ];
-            sections.push({ heading: `Events — ${monthLabel}`, body: `<ul>${items.join('')}</ul>`, order: sections.length });
+            sections.push({ heading: `Events — ${monthLabel}`, body: blocks.join(''), order: sections.length });
         }
 
         if (agg.projects.length) {
