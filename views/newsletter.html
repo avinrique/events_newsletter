@@ -86,6 +86,22 @@
             margin: -3rem -3.5rem 2.5rem;
             border-radius: var(--radius-md) var(--radius-md) 0 0;
         }
+        /* Curated newsletter has its own light "newspaper" theme — override the
+           site-wide dark theme's heading colors so the title doesn't ghost out. */
+        .curated-newsletter h1,
+        .curated-newsletter h2,
+        .curated-newsletter h3,
+        .curated-newsletter h4,
+        .curated-newsletter h5,
+        .curated-newsletter h6,
+        .curated-newsletter p,
+        .curated-newsletter li,
+        .curated-newsletter strong,
+        .curated-newsletter em { color: #1a1a1a; }
+        .curated-newsletter .curated-byline,
+        .curated-newsletter .curated-subtitle { color: #555; }
+        .curated-newsletter .curated-section-heading { color: #1a1a1a; }
+        .curated-newsletter .curated-summary { color: #333; }
         .curated-rainbow {
             height: 4px;
             background: linear-gradient(90deg, #d62828 0%, #e09e2c 25%, #588157 50%, #1d3557 75%, #6a4c93 100%);
