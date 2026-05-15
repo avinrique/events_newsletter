@@ -8,7 +8,8 @@ const {
     getClub,
     approveClub,
     joinClub,
-    updateMemberRole
+    updateMemberRole,
+    updateMemberStatus
 } = require('../controllers/club.controller');
 
 router.use(protect);
@@ -54,5 +55,12 @@ router.put('/:id/members/:memberId/role', [
     body('role').isIn(['President', 'Vice President', 'Secretary', 'Treasurer', 'Executive Member', 'Member'])
         .withMessage('Invalid role')
 ], updateMemberRole);
+
+// @route   PUT /api/clubs/:id/members/:memberId/status
+// @desc    Approve or reject a pending club member (Mentor/HOD only)
+// @access  Private
+router.put('/:id/members/:memberId/status', [
+    body('status').isIn(['approved', 'rejected', 'pending']).withMessage('Invalid status')
+], updateMemberStatus);
 
 module.exports = router;

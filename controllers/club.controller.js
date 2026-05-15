@@ -336,12 +336,13 @@ exports.joinClub = async (req, res) => {
             });
         }
 
-        // Add student as member
+        // Add student as member (pending mentor approval)
         club.members.push({
             student: req.user.id,
             role: 'Member',
             joinDate: new Date(),
-            isActive: true
+            isActive: true,
+            status: 'pending'
         });
 
         await club.save();
@@ -432,5 +433,46 @@ exports.updateMemberRole = async (req, res) => {
             message: 'Error updating member role',
             error: error.message
         });
+    }
+};
+
+// @desc    Approve/reject pending club member (mentor or HOD)
+// @route   PUT /api/clubs/:id/members/:memberId/status
+exports.updateMemberStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const { id: clubId, memberId } = req.params;
+
+        if (!['approved', 'rejected', 'pending'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const club = await Club.findById(clubId);
+        if (!club) {
+            return res.status(404).json({ success: false, message: 'Club not found' });
+        }
+
+        const isMentor = club.mentors.some(m => m.teacher.toString() === req.user.id);
+        const isHOD = req.user.role === 'teacher' && req.user.position === 'HOD' &&
+            club.department.toString() === req.user.department.toString();
+        if (!isMentor && !isHOD) {
+            return res.status(403).json({ success: false, message: 'Not authorized to update club members' });
+        }
+
+        const member = club.members.id(memberId) ||
+            club.members.find(m => m._id?.toString() === memberId) ||
+            club.members.find(m => m.student?.toString() === memberId);
+        if (!member) {
+            return res.status(404).json({ success: false, message: 'Member not found in this club' });
+        }
+
+        member.status = status;
+        if (status === 'rejected') member.isActive = false;
+        await club.save();
+
+        res.status(200).json({ success: true, message: `Member ${status}`, data: member });
+    } catch (error) {
+        console.error('Error updating member status:', error);
+        res.status(500).json({ success: false, message: 'Error updating member status', error: error.message });
     }
 };

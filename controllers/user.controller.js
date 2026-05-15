@@ -167,7 +167,15 @@ exports.updateUser = async (req, res) => {
             profileImage: req.body.profileImage,
             semester: req.body.semester,
             isActive: req.body.isActive,
-            password: req.body.password
+            password: req.body.password,
+            // Student-specific assignments — required so admin/HOD can assign proctor and class teacher.
+            proctor: req.body.proctor,
+            classTeacher: req.body.classTeacher,
+            usn: req.body.usn,
+            rollNumber: req.body.rollNumber,
+            alternateContact: req.body.alternateContact,
+            // Teacher specialization/HOD position helpers
+            position: req.body.position
         };
 
         // Remove undefined fields

@@ -1320,7 +1320,7 @@ class TeacherDashboard {
 
     async _handleClubMemberDecision(clubId, memberId, status) {
         try {
-            await this.api.request(`/clubs/${clubId}/members/${memberId}/role`, {
+            await this.api.request(`/clubs/${clubId}/members/${memberId}/status`, {
                 method: 'PUT',
                 body: { status }
             });
